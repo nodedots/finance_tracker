@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .bg-ambient {
+            background-color: #F1F3F5;
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-surface-variant": "#46464a",
+                        "tertiary": "#000000",
+                        "on-secondary": "#ffffff",
+                        "on-background": "#191c1d",
+                        "on-secondary-fixed": "#000965",
+                        "tertiary-fixed-dim": "#4ae176",
+                        "surface-bright": "#f8f9fa",
+                        "surface": "#f8f9fa",
+                        "on-surface": "#191c1d",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-container": "#16238e",
+                        "on-primary-fixed-variant": "#474647",
+                        "surface-variant": "#e1e3e4",
+                        "on-tertiary-container": "#009844",
+                        "error-container": "#ffdad6",
+                        "secondary": "#4854bb",
+                        "outline": "#77777b",
+                        "on-primary-fixed": "#1c1b1c",
+                        "error": "#ba1a1a",
+                        "surface-tint": "#5f5e5f",
+                        "surface-container-lowest": "#ffffff",
+                        "secondary-container": "#8692fd",
+                        "inverse-surface": "#2e3132",
+                        "inverse-on-surface": "#f0f1f2",
+                        "surface-container-highest": "#e1e3e4",
+                        "surface-container": "#edeeef",
+                        "tertiary-container": "#002109",
+                        "surface-dim": "#d9dadb",
+                        "secondary-fixed": "#dfe0ff",
+                        "on-tertiary-fixed-variant": "#005321",
+                        "on-error-container": "#93000a",
+                        "on-error": "#ffffff",
+                        "inverse-primary": "#c8c6c7",
+                        "tertiary-fixed": "#6bff8f",
+                        "primary-fixed": "#e5e2e3",
+                        "background": "#f8f9fa",
+                        "on-tertiary-fixed": "#002109",
+                        "primary-fixed-dim": "#c8c6c7",
+                        "on-primary-container": "#858384",
+                        "surface-container-low": "#f3f4f5",
+                        "on-primary": "#ffffff",
+                        "secondary-fixed-dim": "#bdc2ff",
+                        "on-secondary-fixed-variant": "#2e3aa2",
+                        "surface-container-high": "#e7e8e9",
+                        "primary-container": "#1c1b1c",
+                        "primary": "#000000",
+                        "outline-variant": "#c7c6ca"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "fontFamily": {
+                        "headline-md": ["Manrope"],
+                        "headline-xl": ["Manrope"],
+                        "label-md": ["Inter"],
+                        "headline-lg": ["Manrope"],
+                        "body-md": ["Inter"],
+                        "body-lg": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-md": ["32px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "headline-xl": ["64px", {"lineHeight": "1.1", "letterSpacing": "-0.03em", "fontWeight": "700"}],
+                        "label-md": ["14px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                        "headline-lg": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-ambient font-body-md text-on-surface antialiased min-h-screen flex flex-col items-center">
+<!-- Top AppBar (from JSON context) -->
+<header class="bg-white dark:bg-zinc-950 font-manrope antialiased tracking-tight docked full-width top-0 border-b border-zinc-100 dark:border-zinc-900 shadow-sm dark:shadow-none flex justify-between items-center w-full px-6 py-4 sticky z-40">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded-full overflow-hidden bg-surface-container">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="Headshot of a professional man in his 30s with a friendly expression, soft natural lighting, minimalist grey background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCu_8nqiIOGus_UVDQ5SQ727577AA4Ft7uddORDGjxb4sioeBBuXMywnZcA8NWlEWQQrrv8BZSU6jtypNsQNieBZbnLaTBwdIUYV68w6_lsNDFzTabDPAAgZbO61nlsniiRiHTcrcIQ5Wx8M_Ot8Ih1W84BjsHQ_K20jJ1AcDAoAqyTf0htX8K1AGfR8cMGBybnaKLMKbqWkURyUnf9SLHZfbBH8lBYNAz7GfZhVhq4h6i85zJizWivxW4u3OFa8JD8oGTqwVi5w_kZ"/>
+</div>
+<span class="text-xl font-extrabold tracking-tighter text-zinc-900 dark:text-zinc-50">Financier</span>
+</div>
+<button class="text-zinc-900 dark:text-zinc-50 hover:bg-zinc-50 dark:hover:bg-zinc-900 transition-colors p-2 rounded-full active:scale-95 duration-150">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</button>
+</header>
+<main class="w-full max-w-md pb-32 pt-8 px-6 space-y-8">
+<!-- Profile Section -->
+<section class="bg-surface-container-lowest rounded-2xl p-6 border border-outline-variant/30 flex flex-col items-center text-center shadow-sm">
+<div class="relative mb-4">
+<div class="w-24 h-24 rounded-full p-1 border-2 border-primary ring-4 ring-white shadow-xl overflow-hidden">
+<img alt="Avatar" class="w-full h-full object-cover rounded-full" data-alt="Close-up profile photo of a modern professional, soft rim lighting, clean high-end studio photography" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAZ5M3mLOWD6M_zPwu0GZF6LR2ZqPeBRbaZqJQ46bUPuDbV_ZBqM4CfSG5dSZMMnIyVTvAxwlkf0NbYej3TGY7-R84yRqmXPxSYFNPLcmwkLEj_JRqXux__zHq2jPzYYgCeSWVHzZvU30NESTAMZBpXSPvWVP8CwfqT9qPAARLWZWxNAsQ1ujATuTRdyZ8khmqx5BLo4JQaIV1kj3dsed4XYS5DfRfGs-84rL-otMb7egiiugrIzC4wQ4JmDdktvlOBlIPLDI9IOtD8"/>
+</div>
+<button class="absolute bottom-0 right-0 bg-primary text-white p-2 rounded-full border-4 border-white shadow-md active:scale-90 transition-transform">
+<span class="material-symbols-outlined text-[18px]" data-icon="edit">edit</span>
+</button>
+</div>
+<h1 class="font-headline-md text-on-surface">Alex Thompson</h1>
+<p class="font-body-md text-on-surface-variant">alex.thompson@prime.com</p>
+<div class="mt-4 inline-flex items-center px-3 py-1 bg-tertiary-fixed text-on-tertiary-fixed rounded-full text-[12px] font-bold">
+                PRO PLAN
+            </div>
+</section>
+<!-- Data Sources Section -->
+<section class="space-y-3">
+<h2 class="font-label-md text-on-surface-variant uppercase tracking-widest px-2">Data Sources</h2>
+<div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 overflow-hidden">
+<div class="flex items-center justify-between p-4 hover:bg-surface-container-low transition-colors group cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="mail">mail</span>
+</div>
+<div>
+<p class="font-label-md text-on-surface">Gmail</p>
+<p class="text-[12px] text-on-surface-variant">Scanning receipts automatically</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-[12px] font-semibold text-tertiary-fixed-dim">Linked</span>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<div class="h-[1px] bg-outline-variant/20 mx-4"></div>
+<div class="flex items-center justify-between p-4 hover:bg-surface-container-low transition-colors group cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="sms">sms</span>
+</div>
+<div>
+<p class="font-label-md text-on-surface">SMS Notifications</p>
+<p class="text-[12px] text-on-surface-variant">Bank alert parsing active</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-[12px] font-semibold text-tertiary-fixed-dim">Active</span>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+<div class="h-[1px] bg-outline-variant/20 mx-4"></div>
+<div class="flex items-center justify-between p-4 hover:bg-surface-container-low transition-colors group cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-xl bg-zinc-100 text-zinc-900 flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="camera_alt">camera_alt</span>
+</div>
+<div>
+<p class="font-label-md text-on-surface">Camera Permissions</p>
+<p class="text-[12px] text-on-surface-variant">Manual receipt capture</p>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<span class="text-[12px] font-semibold text-on-surface-variant">Enabled</span>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
+</div>
+</div>
+</div>
+</section>
+<!-- App Preferences Section -->
+<section class="space-y-3">
+<h2 class="font-label-md text-on-surface-variant uppercase tracking-widest px-2">App Preferences</h2>
+<div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 overflow-hidden">
+<div class="flex items-center justify-between p-4 hover:bg-surface-container-low transition-colors group cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="payments">payments</span>
+</div>
+<div>
+<p class="font-label-md text-on-surface">Default Currency</p>
+<p class="text-[12px] text-on-surface-variant">United States Dollar (USD)</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform" data-icon="chevron_right">chevron_right</span>
+</div>
+<div class="h-[1px] bg-outline-variant/20 mx-4"></div>
+<div class="flex items-center justify-between p-4 hover:bg-surface-container-low transition-colors group cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-xl bg-primary text-white flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="notifications_active">notifications_active</span>
+</div>
+<div>
+<p class="font-label-md text-on-surface">Push Notifications</p>
+<p class="text-[12px] text-on-surface-variant">Instant transaction alerts</p>
+</div>
+</div>
+<div class="relative inline-flex items-center cursor-pointer">
+<div class="w-11 h-6 bg-primary rounded-full"></div>
+<div class="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform translate-x-5"></div>
+</div>
+</div>
+</div>
+</section>
+<!-- Legal Section -->
+<section class="space-y-3">
+<h2 class="font-label-md text-on-surface-variant uppercase tracking-widest px-2">Legal</h2>
+<div class="bg-surface-container-lowest rounded-2xl border border-outline-variant/30 overflow-hidden">
+<div class="flex items-center justify-between p-4 hover:bg-surface-container-low transition-colors group cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-xl bg-zinc-100 text-zinc-600 flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="policy">policy</span>
+</div>
+<div>
+<p class="font-label-md text-on-surface">Privacy Policy</p>
+<p class="text-[12px] text-on-surface-variant">How we protect your data</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform" data-icon="open_in_new">open_in_new</span>
+</div>
+<div class="h-[1px] bg-outline-variant/20 mx-4"></div>
+<div class="flex items-center justify-between p-4 hover:bg-surface-container-low transition-colors group cursor-pointer">
+<div class="flex items-center gap-4">
+<div class="w-10 h-10 rounded-xl bg-zinc-100 text-zinc-600 flex items-center justify-center">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+</div>
+<div>
+<p class="font-label-md text-on-surface">Terms of Service</p>
+<p class="text-[12px] text-on-surface-variant">Last updated Oct 2023</p>
+</div>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant group-hover:translate-x-1 transition-transform" data-icon="open_in_new">open_in_new</span>
+</div>
+</div>
+</section>
+<div class="pt-4 pb-8 flex justify-center">
+<button class="flex items-center gap-2 text-error font-label-md hover:bg-error-container/20 px-6 py-3 rounded-xl transition-colors">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+                Logout Account
+            </button>
+</div>
+</main>
+<!-- Bottom Navigation (from JSON context) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-4 pb-safe pt-3 bg-white/95 dark:bg-zinc-950/95 backdrop-blur-md border-t border-zinc-100 dark:border-zinc-900 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] dark:shadow-none font-manrope text-[10px] font-semibold uppercase tracking-wider rounded-t-2xl">
+<div class="flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-500 px-4 py-1.5 active:scale-90 transition-transform duration-200 ease-out hover:text-zinc-600 dark:hover:text-zinc-300">
+<span class="material-symbols-outlined text-[24px] mb-1" data-icon="dashboard">dashboard</span>
+<span>Dashboard</span>
+</div>
+<div class="flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-500 px-4 py-1.5 active:scale-90 transition-transform duration-200 ease-out hover:text-zinc-600 dark:hover:text-zinc-300">
+<span class="material-symbols-outlined text-[24px] mb-1" data-icon="receipt_long">receipt_long</span>
+<span>Transactions</span>
+</div>
+<div class="flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-500 px-4 py-1.5 active:scale-90 transition-transform duration-200 ease-out hover:text-zinc-600 dark:hover:text-zinc-300">
+<span class="material-symbols-outlined text-[24px] mb-1" data-icon="qr_code_scanner">qr_code_scanner</span>
+<span>Scan</span>
+</div>
+<div class="flex flex-col items-center justify-center text-zinc-900 dark:text-zinc-50 bg-zinc-100 dark:bg-zinc-800 rounded-xl px-4 py-1.5 active:scale-90 transition-transform duration-200 ease-out">
+<span class="material-symbols-outlined text-[24px] mb-1" data-icon="more_horiz">more_horiz</span>
+<span>More</span>
+</div>
+</nav>
+</body></html>

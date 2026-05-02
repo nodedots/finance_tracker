@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-container": "#16238e",
+                        "on-secondary-fixed": "#000965",
+                        "inverse-surface": "#2e3132",
+                        "on-secondary-fixed-variant": "#2e3aa2",
+                        "on-tertiary": "#ffffff",
+                        "tertiary-fixed-dim": "#4ae176",
+                        "surface-tint": "#5f5e5f",
+                        "outline": "#77777b",
+                        "on-error-container": "#93000a",
+                        "on-primary-fixed-variant": "#474647",
+                        "on-primary-fixed": "#1c1b1c",
+                        "surface-variant": "#e1e3e4",
+                        "error-container": "#ffdad6",
+                        "on-tertiary-fixed-variant": "#005321",
+                        "primary": "#000000",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-high": "#e7e8e9",
+                        "surface-container": "#edeeef",
+                        "primary-fixed": "#e5e2e3",
+                        "on-secondary": "#ffffff",
+                        "on-background": "#191c1d",
+                        "tertiary-container": "#002109",
+                        "surface-container-low": "#f3f4f5",
+                        "background": "#f8f9fa",
+                        "on-tertiary-container": "#009844",
+                        "surface": "#f8f9fa",
+                        "on-primary": "#ffffff",
+                        "error": "#ba1a1a",
+                        "on-primary-container": "#858384",
+                        "inverse-primary": "#c8c6c7",
+                        "on-surface": "#191c1d",
+                        "on-surface-variant": "#46464a",
+                        "secondary-container": "#8692fd",
+                        "tertiary-fixed": "#6bff8f",
+                        "surface-dim": "#d9dadb",
+                        "secondary-fixed": "#dfe0ff",
+                        "outline-variant": "#c7c6ca",
+                        "on-error": "#ffffff",
+                        "surface-bright": "#f8f9fa",
+                        "secondary": "#4854bb",
+                        "primary-container": "#1c1b1c",
+                        "inverse-on-surface": "#f0f1f2",
+                        "surface-container-highest": "#e1e3e4",
+                        "on-tertiary-fixed": "#002109",
+                        "tertiary": "#000000",
+                        "secondary-fixed-dim": "#bdc2ff",
+                        "primary-fixed-dim": "#c8c6c7"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "stack-md": "16px",
+                        "gutter": "32px",
+                        "container-max": "1280px",
+                        "stack-sm": "8px",
+                        "section-padding": "120px",
+                        "stack-lg": "24px"
+                    },
+                    "fontFamily": {
+                        "headline-xl": ["Manrope"],
+                        "body-lg": ["Inter"],
+                        "headline-lg": ["Manrope"],
+                        "headline-md": ["Manrope"],
+                        "label-md": ["Inter"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-xl": ["64px", {"lineHeight": "1.1", "letterSpacing": "-0.03em", "fontWeight": "700"}],
+                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
+                        "headline-lg": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600"}],
+                        "headline-md": ["32px", {"lineHeight": "1.3", "fontWeight": "600"}],
+                        "label-md": ["14px", {"lineHeight": "1.2", "fontWeight": "600"}],
+                        "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .camera-overlay {
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(2px);
+            clip-path: polygon(0% 0%, 0% 100%, 10% 100%, 10% 20%, 90% 20%, 90% 80%, 10% 80%, 10% 100%, 100% 100%, 100% 0%);
+        }
+        .scanning-line {
+            animation: scan 3s ease-in-out infinite;
+        }
+        @keyframes scan {
+            0% { top: 20%; opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 80%; opacity: 0; }
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-primary overflow-hidden h-screen flex flex-col font-body-md text-on-surface">
+<!-- Top App Bar -->
+<header class="flex justify-between items-center w-full px-6 py-4 sticky top-0 z-50 bg-transparent text-white">
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors active:scale-95 duration-200">
+<span class="material-symbols-outlined">close</span>
+</button>
+<h1 class="font-manrope font-bold text-lg tracking-tight">Scan Receipt</h1>
+<button class="w-10 h-10 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors active:scale-95 duration-200">
+<span class="material-symbols-outlined">flash_on</span>
+</button>
+</header>
+<!-- Main Viewfinder Area -->
+<main class="relative flex-grow flex items-center justify-center overflow-hidden">
+<!-- Mock Camera Feed -->
+<div class="absolute inset-0 z-0">
+<img alt="Receipt on a wooden table" class="w-full h-full object-cover brightness-75" data-alt="Top down view of a crumpled paper receipt resting on a dark walnut wooden tabletop with soft natural side lighting" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCTvtAVm-f6FZY_-4pxbh-Mo95f_2Uu4nz2xG8Wz_eZ4N1OnTqVnU-9otUYn5xnHUuiZgfUbmOZAVEcD0oFTTwBb8PEqaSeNpSSITtVxU2ra1py_uotFKj7GlYCjVlaws7ArBiP2oHq0cgwnt3nIHFOav6TkplaU3x5C-F5UdMeroVEPFfYD6wDbENgcP7NrfylOVcNer8uqr0X6QPjgfOZdtaz-Z4eTxWX1XIWiAWz3CiD7dd9oNmLdPk4n-KT_6KLtFtoGMBn2vgx"/>
+</div>
+<!-- Scanning Overlay -->
+<div class="absolute inset-0 z-10 camera-overlay"></div>
+<!-- Scanning Frame -->
+<div class="relative z-20 w-[80%] aspect-[3/4] max-w-sm border-2 border-white/50 rounded-xl overflow-hidden">
+<!-- Corner Accents -->
+<div class="absolute top-0 left-0 w-8 h-8 border-t-4 border-l-4 border-white rounded-tl-lg"></div>
+<div class="absolute top-0 right-0 w-8 h-8 border-t-4 border-r-4 border-white rounded-tr-lg"></div>
+<div class="absolute bottom-0 left-0 w-8 h-8 border-b-4 border-l-4 border-white rounded-bl-lg"></div>
+<div class="absolute bottom-0 right-0 w-8 h-8 border-b-4 border-r-4 border-white rounded-br-lg"></div>
+<!-- Scanning Line -->
+<div class="scanning-line absolute left-0 right-0 h-1 bg-gradient-to-r from-transparent via-secondary-container to-transparent shadow-[0_0_15px_rgba(134,146,253,0.8)] z-30"></div>
+</div>
+<!-- Tooltips/Instructions -->
+<div class="absolute top-[12%] z-30 w-full flex flex-col items-center gap-2 px-6 text-center">
+<div class="bg-white/10 backdrop-blur-md border border-white/20 px-4 py-2 rounded-full shadow-2xl">
+<p class="text-white text-label-md">Align receipt within the frame</p>
+</div>
+<p class="text-white/60 text-[12px] font-medium tracking-wide uppercase">Keep steady for OCR</p>
+</div>
+<!-- Bottom Controls (Camera HUD) -->
+<div class="absolute bottom-8 z-30 w-full px-10 flex items-center justify-between">
+<button class="flex flex-col items-center gap-1 group">
+<div class="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center group-hover:bg-white/20 transition-all">
+<span class="material-symbols-outlined text-white">photo_library</span>
+</div>
+<span class="text-white/80 text-[10px] font-bold uppercase tracking-wider">Gallery</span>
+</button>
+<!-- Shutter Button -->
+<button class="relative group active:scale-90 transition-transform duration-200">
+<div class="w-20 h-20 rounded-full border-4 border-white/30 flex items-center justify-center">
+<div class="w-16 h-16 rounded-full bg-white shadow-xl group-hover:scale-95 transition-transform"></div>
+</div>
+</button>
+<button class="flex flex-col items-center gap-1 group opacity-0 pointer-events-none">
+<div class="w-12 h-12 rounded-full bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-white">history</span>
+</div>
+<span class="text-white/80 text-[10px] font-bold uppercase tracking-wider">Recent</span>
+</button>
+</div>
+</main>
+<!-- Bottom Navigation Bar -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center pt-3 pb-8 px-4 bg-white/90 dark:bg-zinc-950/90 backdrop-blur-xl border-t border-zinc-100 dark:border-zinc-800 shadow-[0_-4px_24px_rgba(0,0,0,0.04)]">
+<!-- Dashboard -->
+<a class="flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-500 opacity-60 hover:opacity-100 transition-opacity tap-highlight-none active:scale-90 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="grid_view">grid_view</span>
+<span class="font-manrope text-[10px] font-bold uppercase tracking-widest mt-1">Dashboard</span>
+</a>
+<!-- Activity -->
+<a class="flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-500 opacity-60 hover:opacity-100 transition-opacity tap-highlight-none active:scale-90 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+<span class="font-manrope text-[10px] font-bold uppercase tracking-widest mt-1">Activity</span>
+</a>
+<!-- Scan (Active) -->
+<a class="flex flex-col items-center justify-center text-zinc-950 dark:text-zinc-50 opacity-100 scale-105 transition-opacity tap-highlight-none active:scale-90 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="qr_code_scanner" style="font-variation-settings: 'FILL' 1;">qr_code_scanner</span>
+<span class="font-manrope text-[10px] font-bold uppercase tracking-widest mt-1">Scan</span>
+</a>
+<!-- More -->
+<a class="flex flex-col items-center justify-center text-zinc-400 dark:text-zinc-500 opacity-60 hover:opacity-100 transition-opacity tap-highlight-none active:scale-90 duration-300 ease-out" href="#">
+<span class="material-symbols-outlined" data-icon="more_horiz">more_horiz</span>
+<span class="font-manrope text-[10px] font-bold uppercase tracking-widest mt-1">More</span>
+</a>
+</nav>
+<!-- Visual Polish: Status Bar (Simulated) -->
+<div class="fixed top-0 left-0 w-full h-8 flex justify-between items-center px-6 z-[60] text-white/80 pointer-events-none">
+<span class="text-xs font-bold">9:41</span>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-xs">signal_cellular_alt</span>
+<span class="material-symbols-outlined text-xs">wifi</span>
+<span class="material-symbols-outlined text-xs">battery_full</span>
+</div>
+</div>
+</body></html>

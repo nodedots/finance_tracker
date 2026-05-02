@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Fintrack – Prototype</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;600&display=swap" rel="stylesheet"/>
+<style>
+  body { font-family: 'Inter', sans-serif; background: #0f0f0f; margin: 0; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
+  #device-frame { flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px 16px 8px; }
+  .phone { width: 390px; height: 780px; background: #fff; border-radius: 48px; border: 10px solid #1a1a1a; box-shadow: 0 40px 80px rgba(0,0,0,0.6), inset 0 0 0 1px #333; overflow: hidden; position: relative; flex-shrink: 0; }
+  .phone::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 120px; height: 28px; background: #1a1a1a; border-radius: 0 0 20px 20px; z-index: 10; }
+  iframe { width: 100%; height: 100%; border: none; display: block; }
+  #nav-bar { background: #1a1a1a; border-top: 1px solid #2a2a2a; padding: 12px 16px; display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap; }
+  .nav-btn { background: #2a2a2a; color: #aaa; border: 1px solid #333; border-radius: 20px; padding: 6px 14px; font-size: 11px; font-weight: 600; cursor: pointer; transition: all 0.15s; white-space: nowrap; font-family: 'Inter', sans-serif; letter-spacing: 0.03em; }
+  .nav-btn:hover { background: #3a3a3a; color: #fff; }
+  .nav-btn.active { background: #fff; color: #000; border-color: #fff; }
+  .label { color: #555; font-size: 10px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; padding: 0 4px; }
+</style>
+</head>
+<body>
+
+<div id="device-frame">
+  <div class="phone">
+    <iframe id="screen" src="fintrack_app/landing_page.html" title="Fintrack Prototype"></iframe>
+  </div>
+</div>
+
+<div id="nav-bar">
+  <span class="label">Pages:</span>
+  <button class="nav-btn active" onclick="go('fintrack_app/landing_page.html', this)">Landing</button>
+  <button class="nav-btn" onclick="go('fintrack_app/login_fintrack.html', this)">Login</button>
+  <button class="nav-btn" onclick="go('fintrack_app/onboarding.html', this)">Onboarding</button>
+  <button class="nav-btn" onclick="go('fintrack_app/permissions_hub.html', this)">Permissions</button>
+  <button class="nav-btn" onclick="go('fintrack_app/dashboard.html', this)">Dashboard</button>
+  <button class="nav-btn" onclick="go('fintrack_app/transactions_list.html', this)">Transactions</button>
+  <button class="nav-btn" onclick="go('fintrack_app/transaction_detail.html', this)">Txn Detail</button>
+  <button class="nav-btn" onclick="go('fintrack_app/scan_receipt.html', this)">Scan</button>
+  <button class="nav-btn" onclick="go('fintrack_app/categories_budget.html', this)">Budget</button>
+  <button class="nav-btn" onclick="go('fintrack_app/settings_profile.html', this)">Settings</button>
+</div>
+
+<script>
+  const iframe = document.getElementById('screen');
+
+  function go(url, btn) {
+    iframe.src = url;
+    document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+
+  // Intercept clicks inside iframe to handle internal navigation
+  iframe.addEventListener('load', () => {
+    try {
+      const doc = iframe.contentDocument;
+      if (!doc) return;
+
+      // Map anchor hrefs to pages
+      const pageMap = {
+        'landing_page': 'fintrack_app/landing_page.html',
+        'login': 'fintrack_app/login_fintrack.html',
+        'onboarding': 'fintrack_app/onboarding.html',
+        'permissions': 'fintrack_app/permissions_hub.html',
+        'dashboard': 'fintrack_app/dashboard.html',
+        'transactions_list': 'fintrack_app/transactions_list.html',
+        'transaction_detail': 'fintrack_app/transaction_detail.html',
+        'scan_receipt': 'fintrack_app/scan_receipt.html',
+        'categories_budget': 'fintrack_app/categories_budget.html',
+        'settings_profile': 'fintrack_app/settings_profile.html',
+      };
+
+      // Wire up CTA buttons by text content
+      const ctaMap = [
+        { texts: ['get started', 'get started for free', 'sign up'], page: 'fintrack_app/login_fintrack.html', label: 'Login' },
+        { texts: ['sign in'], page: 'fintrack_app/onboarding.html', label: 'Onboarding' },
+        { texts: ['continue', 'next', 'get started'], page: 'fintrack_app/permissions_hub.html', label: 'Permissions' },
+        { texts: ['allow', 'enable', 'grant'], page: 'fintrack_app/dashboard.html', label: 'Dashboard' },
+        { texts: ['view all', 'activity'], page: 'fintrack_app/transactions_list.html', label: 'Transactions' },
+        { texts: ['scan', 'photo_camera'], page: 'fintrack_app/scan_receipt.html', label: 'Scan' },
+        { texts: ['budget', 'categories'], page: 'fintrack_app/categories_budget.html', label: 'Budget' },
+        { texts: ['settings', 'profile', 'more_horiz'], page: 'fintrack_app/settings_profile.html', label: 'Settings' },
+      ];
+
+      doc.querySelectorAll('a, button').forEach(el => {
+        const text = el.textContent.trim().toLowerCase();
+        for (const { texts, page, label } of ctaMap) {
+          if (texts.some(t => text.includes(t))) {
+            el.addEventListener('click', (e) => {
+              e.preventDefault();
+              iframe.src = page;
+              document.querySelectorAll('.nav-btn').forEach(b => {
+                if (b.textContent.trim() === label) {
+                  document.querySelectorAll('.nav-btn').forEach(x => x.classList.remove('active'));
+                  b.classList.add('active');
+                }
+              });
+            });
+            break;
+          }
+        }
+      });
+
+      // Sync nav bar highlight with current page
+      const current = iframe.src;
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        const btnPage = btn.getAttribute('onclick').match(/'([^']+)'/)?.[1];
+        if (btnPage && current.includes(btnPage.split('/').pop().replace('.html', ''))) {
+          document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+        }
+      });
+
+    } catch (e) {
+      // cross-origin or other errors — silently ignore
+    }
+  });
+</script>
+</body>
+</html>
