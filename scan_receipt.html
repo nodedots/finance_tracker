@@ -7,118 +7,9 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=Manrope:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
 <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
-<script id="tailwind-config">
-        tailwind.config = {
-            darkMode: "class",
-            theme: {
-                extend: {
-                    "colors": {
-                        "on-secondary-container": "#16238e",
-                        "on-secondary-fixed": "#000965",
-                        "inverse-surface": "#2e3132",
-                        "on-secondary-fixed-variant": "#2e3aa2",
-                        "on-tertiary": "#ffffff",
-                        "tertiary-fixed-dim": "#4ae176",
-                        "surface-tint": "#5f5e5f",
-                        "outline": "#77777b",
-                        "on-error-container": "#93000a",
-                        "on-primary-fixed-variant": "#474647",
-                        "on-primary-fixed": "#1c1b1c",
-                        "surface-variant": "#e1e3e4",
-                        "error-container": "#ffdad6",
-                        "on-tertiary-fixed-variant": "#005321",
-                        "primary": "#000000",
-                        "surface-container-lowest": "#ffffff",
-                        "surface-container-high": "#e7e8e9",
-                        "surface-container": "#edeeef",
-                        "primary-fixed": "#e5e2e3",
-                        "on-secondary": "#ffffff",
-                        "on-background": "#191c1d",
-                        "tertiary-container": "#002109",
-                        "surface-container-low": "#f3f4f5",
-                        "background": "#f8f9fa",
-                        "on-tertiary-container": "#009844",
-                        "surface": "#f8f9fa",
-                        "on-primary": "#ffffff",
-                        "error": "#ba1a1a",
-                        "on-primary-container": "#858384",
-                        "inverse-primary": "#c8c6c7",
-                        "on-surface": "#191c1d",
-                        "on-surface-variant": "#46464a",
-                        "secondary-container": "#8692fd",
-                        "tertiary-fixed": "#6bff8f",
-                        "surface-dim": "#d9dadb",
-                        "secondary-fixed": "#dfe0ff",
-                        "outline-variant": "#c7c6ca",
-                        "on-error": "#ffffff",
-                        "surface-bright": "#f8f9fa",
-                        "secondary": "#4854bb",
-                        "primary-container": "#1c1b1c",
-                        "inverse-on-surface": "#f0f1f2",
-                        "surface-container-highest": "#e1e3e4",
-                        "on-tertiary-fixed": "#002109",
-                        "tertiary": "#000000",
-                        "secondary-fixed-dim": "#bdc2ff",
-                        "primary-fixed-dim": "#c8c6c7"
-                    },
-                    "borderRadius": {
-                        "DEFAULT": "0.25rem",
-                        "lg": "0.5rem",
-                        "xl": "0.75rem",
-                        "full": "9999px"
-                    },
-                    "spacing": {
-                        "stack-md": "16px",
-                        "gutter": "32px",
-                        "container-max": "1280px",
-                        "stack-sm": "8px",
-                        "section-padding": "120px",
-                        "stack-lg": "24px"
-                    },
-                    "fontFamily": {
-                        "headline-xl": ["Manrope"],
-                        "body-lg": ["Inter"],
-                        "headline-lg": ["Manrope"],
-                        "headline-md": ["Manrope"],
-                        "label-md": ["Inter"],
-                        "body-md": ["Inter"]
-                    },
-                    "fontSize": {
-                        "headline-xl": ["64px", {"lineHeight": "1.1", "letterSpacing": "-0.03em", "fontWeight": "700"}],
-                        "body-lg": ["18px", {"lineHeight": "1.6", "fontWeight": "400"}],
-                        "headline-lg": ["48px", {"lineHeight": "1.2", "letterSpacing": "-0.02em", "fontWeight": "600"}],
-                        "headline-md": ["32px", {"lineHeight": "1.3", "fontWeight": "600"}],
-                        "label-md": ["14px", {"lineHeight": "1.2", "fontWeight": "600"}],
-                        "body-md": ["16px", {"lineHeight": "1.5", "fontWeight": "400"}]
-                    }
-                },
-            },
-        }
-    </script>
-<style>
-        .camera-overlay {
-            background: rgba(0, 0, 0, 0.4);
-            backdrop-filter: blur(2px);
-            clip-path: polygon(0% 0%, 0% 100%, 10% 100%, 10% 20%, 90% 20%, 90% 80%, 10% 80%, 10% 100%, 100% 100%, 100% 0%);
-        }
-        .scanning-line {
-            animation: scan 3s ease-in-out infinite;
-        }
-        @keyframes scan {
-            0% { top: 20%; opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { top: 80%; opacity: 0; }
-        }
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-        }
-    </style>
-<style>
-    body {
-      min-height: max(884px, 100dvh);
-    }
-  </style>
+<script src="assets/js/tailwind.config.js"></script>
+<link rel="stylesheet" href="assets/css/styles.css">
+
   </head>
 <body class="bg-primary overflow-hidden h-screen flex flex-col font-body-md text-on-surface">
 <!-- Top App Bar -->
@@ -210,4 +101,5 @@
 <span class="material-symbols-outlined text-xs">battery_full</span>
 </div>
 </div>
+<script src="assets/js/app.js"></script>
 </body></html>
