@@ -23,22 +23,22 @@
 
 <div id="device-frame">
   <div class="phone">
-    <iframe id="screen" src="fintrack_app/landing_page.html" title="Fintrack Prototype"></iframe>
+    <iframe id="screen" src="landing_page.html" title="Fintrack Prototype"></iframe>
   </div>
 </div>
 
 <div id="nav-bar">
   <span class="label">Pages:</span>
-  <button class="nav-btn active" onclick="go('fintrack_app/landing_page.html', this)">Landing</button>
-  <button class="nav-btn" onclick="go('fintrack_app/login_fintrack.html', this)">Login</button>
-  <button class="nav-btn" onclick="go('fintrack_app/onboarding.html', this)">Onboarding</button>
-  <button class="nav-btn" onclick="go('fintrack_app/permissions_hub.html', this)">Permissions</button>
-  <button class="nav-btn" onclick="go('fintrack_app/dashboard.html', this)">Dashboard</button>
-  <button class="nav-btn" onclick="go('fintrack_app/transactions_list.html', this)">Transactions</button>
-  <button class="nav-btn" onclick="go('fintrack_app/transaction_detail.html', this)">Txn Detail</button>
-  <button class="nav-btn" onclick="go('fintrack_app/scan_receipt.html', this)">Scan</button>
-  <button class="nav-btn" onclick="go('fintrack_app/categories_budget.html', this)">Budget</button>
-  <button class="nav-btn" onclick="go('fintrack_app/settings_profile.html', this)">Settings</button>
+  <button class="nav-btn active" onclick="go('landing_page.html', this)">Landing</button>
+  <button class="nav-btn" onclick="go('login_fintrack.html', this)">Login</button>
+  <button class="nav-btn" onclick="go('onboarding.html', this)">Onboarding</button>
+  <button class="nav-btn" onclick="go('permissions_hub.html', this)">Permissions</button>
+  <button class="nav-btn" onclick="go('dashboard.html', this)">Dashboard</button>
+  <button class="nav-btn" onclick="go('transactions_list.html', this)">Transactions</button>
+  <button class="nav-btn" onclick="go('transaction_detail.html', this)">Txn Detail</button>
+  <button class="nav-btn" onclick="go('scan_receipt.html', this)">Scan</button>
+  <button class="nav-btn" onclick="go('categories_budget.html', this)">Budget</button>
+  <button class="nav-btn" onclick="go('settings_profile.html', this)">Settings</button>
 </div>
 
 <script>
@@ -58,28 +58,28 @@
 
       // Map anchor hrefs to pages
       const pageMap = {
-        'landing_page': 'fintrack_app/landing_page.html',
-        'login': 'fintrack_app/login_fintrack.html',
-        'onboarding': 'fintrack_app/onboarding.html',
-        'permissions': 'fintrack_app/permissions_hub.html',
-        'dashboard': 'fintrack_app/dashboard.html',
-        'transactions_list': 'fintrack_app/transactions_list.html',
-        'transaction_detail': 'fintrack_app/transaction_detail.html',
-        'scan_receipt': 'fintrack_app/scan_receipt.html',
-        'categories_budget': 'fintrack_app/categories_budget.html',
-        'settings_profile': 'fintrack_app/settings_profile.html',
+        'landing_page': 'landing_page.html',
+        'login': 'login_fintrack.html',
+        'onboarding': 'onboarding.html',
+        'permissions': 'permissions_hub.html',
+        'dashboard': 'dashboard.html',
+        'transactions_list': 'transactions_list.html',
+        'transaction_detail': 'transaction_detail.html',
+        'scan_receipt': 'scan_receipt.html',
+        'categories_budget': 'categories_budget.html',
+        'settings_profile': 'settings_profile.html',
       };
 
       // Wire up CTA buttons by text content
       const ctaMap = [
-        { texts: ['get started', 'get started for free', 'sign up'], page: 'fintrack_app/login_fintrack.html', label: 'Login' },
-        { texts: ['sign in'], page: 'fintrack_app/onboarding.html', label: 'Onboarding' },
-        { texts: ['continue', 'next', 'get started'], page: 'fintrack_app/permissions_hub.html', label: 'Permissions' },
-        { texts: ['allow', 'enable', 'grant'], page: 'fintrack_app/dashboard.html', label: 'Dashboard' },
-        { texts: ['view all', 'activity'], page: 'fintrack_app/transactions_list.html', label: 'Transactions' },
-        { texts: ['scan', 'photo_camera'], page: 'fintrack_app/scan_receipt.html', label: 'Scan' },
-        { texts: ['budget', 'categories'], page: 'fintrack_app/categories_budget.html', label: 'Budget' },
-        { texts: ['settings', 'profile', 'more_horiz'], page: 'fintrack_app/settings_profile.html', label: 'Settings' },
+        { texts: ['get started', 'get started for free', 'sign up'], page: 'login_fintrack.html', label: 'Login' },
+        { texts: ['sign in'], page: 'onboarding.html', label: 'Onboarding' },
+        { texts: ['continue', 'next', 'get started'], page: 'permissions_hub.html', label: 'Permissions' },
+        { texts: ['allow', 'enable', 'grant'], page: 'dashboard.html', label: 'Dashboard' },
+        { texts: ['view all', 'activity'], page: 'transactions_list.html', label: 'Transactions' },
+        { texts: ['scan', 'photo_camera'], page: 'scan_receipt.html', label: 'Scan' },
+        { texts: ['budget', 'categories'], page: 'categories_budget.html', label: 'Budget' },
+        { texts: ['settings', 'profile', 'more_horiz'], page: 'settings_profile.html', label: 'Settings' },
       ];
 
       doc.querySelectorAll('a, button').forEach(el => {
