@@ -1,30 +1,64 @@
-# Fintrack App Prototype
+# Fintrack - AI-Powered Personal Finance
 
-Fintrack is a high-fidelity prototype of a modern personal finance application. It is built using the **Fintech Modernist** design system, which prioritizes a premium aesthetic, clean minimalism, and an intuitive user experience.
+Fintrack is a high-fidelity personal finance application prototype built with the **Fintech Modernist** design system. It prioritizes a premium aesthetic, clean minimalism, and an intuitive user experience, featuring AI-driven transaction capturing.
 
 ## 🚀 Tech Stack
-- **HTML5**: Semantic structure for all pages.
-- **Tailwind CSS**: Utility-first styling via CDN for rapid UI development and prototyping.
-- **Google Fonts**: Uses `Manrope` for impactful headlines and `Inter` for highly legible body copy.
-- **Material Symbols**: Scalable, modern iconography from Google.
+- **Framework**: [Next.js 15+](https://nextjs.org/) (App Router, Turbopack)
+- **Database**: [Prisma 7](https://www.prisma.io/) with SQLite
+- **Styling**: [Tailwind CSS 4](https://tailwindcss.com/)
+- **Typography**: `Manrope` (Headlines) & `Inter` (Body)
+- **Icons**: [Material Symbols](https://fonts.google.com/icons)
 
 ## ✨ Key Features
-- **Device Frame Preview**: Launch `index.html` to view the app within a sleek mobile device frame.
-- **Dashboard**: A comprehensive financial snapshot with total balances, income/expenses breakdown, and bento-style insights.
-- **Transactions List**: Detailed, filterable activity feed with source indicators (e.g., SMS, Email, Receipt).
-- **Receipt Scanning**: A beautifully mocked camera interface for capturing physical receipts.
-- **Settings & Profile**: User preferences, data source management, and legal information.
+- **Modern Landing Page**: High-impact introduction to the Fintrack ecosystem with smooth animations and interactive mockups.
+- **Magic Link Auth**: Streamlined email-only authentication flow.
+- **Bento Dashboard**: A comprehensive financial snapshot using a modern bento-grid layout for total balances, income/expenses, and savings insights.
+- **Automated Logging**: (Mocked) AI capturing from Email, SMS, and receipts.
+- **Transactions Management**: Filterable, searchable, and grouped activity feed.
+- **Responsive Design**: Mobile-first architecture with a dedicated mobile bottom navigation bar and desktop sidebar.
 
-## 🆕 Recent Updates
-- **Functional Navigation**: Fully interactive Bottom Navigation Bar allowing seamless transitions between the Dashboard, Activity, Scan, and Settings screens.
-- **Quick Add Action**: A stylish Floating Action Button (FAB) on core pages for quick transaction entry.
-- **Micro-Animations**: Staggered `fade-in-up` entrance animations on the Dashboard and Transaction feeds for a dynamic, "effortless grace" feel upon loading.
+## 📂 Project Structure
+The project uses Next.js **Route Groups** for clean separation of concerns:
+- `src/app/(landing)`: Public-facing marketing pages and authentication.
+- `src/app/(dashboard)`: Authenticated application views (Dashboard, Transactions, etc.).
+- `src/components`: Reusable UI components including the `AuthModal` and `Sidebar`.
+- `src/lib`: Shared utilities and Prisma client singleton.
+- `prisma`: Database schema, migrations, and seed scripts.
 
-## 🛠️ How to Run
-Since this is a client-side prototype, no build tools or servers are required!
-1. Clone the repository.
-2. Open `index.html` in your favorite web browser.
-3. Click through the app using the navigation buttons on the side panel or within the app's bottom nav bar.
+## 🛠️ Getting Started
+
+### 1. Prerequisites
+- Node.js (Latest LTS recommended)
+- npm or yarn
+
+### 2. Installation
+```bash
+# Clone the repository
+git clone <repo-url>
+cd fintrack_app
+
+# Install dependencies
+npm install
+```
+
+### 3. Database Setup
+```bash
+# Create .env file
+echo 'DATABASE_URL="file:./dev.db"' > .env
+
+# Run migrations and generate client
+npx prisma migrate dev --name init
+
+# Seed the database with test data
+npx prisma db seed
+```
+
+### 4. Run the App
+```bash
+npm run dev
+```
+Open [http://localhost:3000](http://localhost:3000) to view the landing page.
+Access the dashboard directly at [http://localhost:3000/dashboard](http://localhost:3000/dashboard).
 
 ---
 *Design System: Fintech Modernist*

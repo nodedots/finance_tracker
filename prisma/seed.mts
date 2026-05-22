@@ -1,5 +1,5 @@
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
-import { PrismaClient } from '../src/generated/prisma/client.js';
+import { PrismaClient } from '../src/generated/prisma/client/index.js';
 import { resolve, dirname } from 'path';
 import { fileURLToPath } from 'url';
 

@@ -57,20 +57,20 @@ export default async function Dashboard() {
       <header className="bg-white border-b border-zinc-100 px-6 py-5 md:px-10 md:py-6">
         <div className="max-w-5xl mx-auto flex items-center justify-between">
           <div>
-            <p className="text-zinc-500 text-sm">Welcome back,</p>
-            <h1 className="font-['Manrope'] font-bold text-2xl md:text-3xl text-zinc-900">{user.name}</h1>
+            <p className="text-zinc-500 text-sm font-medium">Welcome back,</p>
+            <h1 className="font-['Manrope'] font-black text-3xl md:text-4xl text-zinc-900 tracking-tight">{user.name}</h1>
           </div>
           <div className="flex items-center gap-3">
             {user.smsActive && (
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#f3f4f5] border border-[#c7c6ca]/30">
-                <span className="w-2 h-2 rounded-full bg-[#009844] animate-pulse" />
-                <span className="text-xs font-semibold text-zinc-500">SMS Active</span>
+              <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-50 border border-zinc-100">
+                <span className="w-2 h-2 rounded-full bg-[#009844]" />
+                <span className="text-[11px] font-black font-['Manrope'] uppercase tracking-widest text-zinc-400">SMS</span>
               </div>
             )}
             {user.gmailLinked && (
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-[#f3f4f5] border border-[#c7c6ca]/30">
-                <span className="w-2 h-2 rounded-full bg-[#009844] animate-pulse" />
-                <span className="text-xs font-semibold text-zinc-500">Email Linked</span>
+              <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-50 border border-zinc-100">
+                <span className="w-2 h-2 rounded-full bg-[#009844]" />
+                <span className="text-[11px] font-black font-['Manrope'] uppercase tracking-widest text-zinc-400">Email</span>
               </div>
             )}
             <button className="w-10 h-10 rounded-xl bg-zinc-100 flex items-center justify-center text-zinc-600 hover:bg-zinc-200 transition-colors">
@@ -115,28 +115,34 @@ export default async function Dashboard() {
           </div>
         </section>
 
-        {/* Insights + Top Spending */}
-        <section className="grid grid-cols-2 md:grid-cols-4 gap-4 opacity-0 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
-          <div className="bg-[#8692fd] rounded-3xl p-5 flex flex-col justify-between aspect-square md:aspect-auto md:min-h-[160px]">
-            <span className="material-symbols-outlined text-[#16238e] text-3xl">savings</span>
+        {/* Insights + Top Spending - Bento Grid */}
+        <section className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 opacity-0 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+          <div className="bg-[#8692fd] rounded-[32px] p-6 flex flex-col justify-between aspect-square md:aspect-auto md:h-48 group hover:scale-[1.02] transition-transform duration-500">
+            <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+              <span className="material-symbols-outlined text-[#16238e] text-2xl">savings</span>
+            </div>
             <div>
-              <p className="text-[#16238e] text-[12px] uppercase mb-1 font-semibold">Savings Rate</p>
-              <p className="font-['Manrope'] font-semibold text-lg text-[#16238e]">{savingsRate}%</p>
+              <p className="text-[#16238e] text-[11px] font-black uppercase tracking-[0.2em] mb-1 opacity-70">Savings Rate</p>
+              <p className="font-['Manrope'] font-black text-3xl text-[#16238e]">{savingsRate}%</p>
             </div>
           </div>
-          <div className="bg-[#e1e3e4] rounded-3xl p-5 flex flex-col justify-between aspect-square md:aspect-auto md:min-h-[160px]">
-            <span className="material-symbols-outlined text-[#191c1d] text-3xl">auto_awesome</span>
+          <div className="bg-zinc-900 rounded-[32px] p-6 flex flex-col justify-between aspect-square md:aspect-auto md:h-48 group hover:scale-[1.02] transition-transform duration-500">
+            <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm">
+              <span className="material-symbols-outlined text-white text-2xl">auto_awesome</span>
+            </div>
             <div>
-              <p className="text-[#46464a] text-[12px] uppercase mb-1 font-semibold">Transactions</p>
-              <p className="font-['Manrope'] font-semibold text-lg text-[#191c1d]">{transactions.length} total</p>
+              <p className="text-zinc-500 text-[11px] font-black uppercase tracking-[0.2em] mb-1">Total Logs</p>
+              <p className="font-['Manrope'] font-black text-3xl text-white">{transactions.length}</p>
             </div>
           </div>
-          {topCategories.slice(0, 2).map((cat) => (
-            <div key={cat.name} className="bg-white rounded-3xl p-5 border border-zinc-100 flex flex-col justify-between aspect-square md:aspect-auto md:min-h-[160px]">
-              <span className="material-symbols-outlined text-3xl" style={{ color: cat.color }}>{cat.icon}</span>
+          {topCategories.slice(0, 2).map((cat, i) => (
+            <div key={cat.name} className="bg-white rounded-[32px] p-6 border border-zinc-100 flex flex-col justify-between aspect-square md:aspect-auto md:h-48 group hover:scale-[1.02] transition-transform duration-500 shadow-sm hover:shadow-xl hover:shadow-zinc-200/50">
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${cat.color}15` }}>
+                <span className="material-symbols-outlined text-2xl" style={{ color: cat.color }}>{cat.icon}</span>
+              </div>
               <div>
-                <p className="text-zinc-500 text-[12px] uppercase mb-1 font-semibold">{cat.name}</p>
-                <p className="font-['Manrope'] font-semibold text-lg text-zinc-900">{formatCurrency(cat.total)}</p>
+                <p className="text-zinc-400 text-[11px] font-black uppercase tracking-[0.2em] mb-1">{cat.name}</p>
+                <p className="font-['Manrope'] font-black text-2xl text-zinc-900">{formatCurrency(cat.total)}</p>
               </div>
             </div>
           ))}
