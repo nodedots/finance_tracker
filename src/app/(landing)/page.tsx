@@ -21,7 +21,6 @@ export default function LandingPage() {
           <div className="hidden md:flex items-center gap-8">
             <Link href="#features" className="text-sm font-bold font-['Manrope'] uppercase tracking-widest text-zinc-500 hover:text-black transition-colors">Features</Link>
             <Link href="#security" className="text-sm font-bold font-['Manrope'] uppercase tracking-widest text-zinc-500 hover:text-black transition-colors">Security</Link>
-            <Link href="#pricing" className="text-sm font-bold font-['Manrope'] uppercase tracking-widest text-zinc-500 hover:text-black transition-colors">Pricing</Link>
           </div>
           <button 
             onClick={() => setIsAuthModalOpen(true)}
@@ -52,7 +51,7 @@ export default function LandingPage() {
                 onClick={() => setIsAuthModalOpen(true)}
                 className="px-10 py-5 bg-black text-white rounded-2xl font-bold font-['Manrope'] text-lg hover:bg-zinc-800 transition-all shadow-2xl shadow-black/20"
               >
-                Get Started Free
+                Get Started Now
               </button>
               <Link 
                 href="/dashboard"
@@ -125,9 +124,9 @@ export default function LandingPage() {
           onClick={() => setIsAuthModalOpen(true)}
           className="px-12 py-6 bg-black text-white rounded-2xl font-bold font-['Manrope'] text-xl hover:bg-zinc-800 transition-all shadow-2xl shadow-black/20"
         >
-          Start Your Free Trial
+          Get Started Now
         </button>
-        <p className="mt-8 text-zinc-400 font-medium">No credit card required. Cancel anytime.</p>
+        <p className="mt-8 text-zinc-400 font-medium">Free to use. Open source prototype.</p>
         <div className="mt-20 pt-10 border-t border-zinc-100 flex flex-col md:flex-row items-center justify-between max-w-7xl mx-auto gap-6">
           <p className="text-sm text-zinc-400">© 2026 Fintrack Inc. All rights reserved.</p>
           <div className="flex gap-8">

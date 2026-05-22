@@ -51,7 +51,7 @@ export default function Sidebar() {
             </div>
             <div className="text-sm">
               <p className="font-semibold text-zinc-900">Alex Thompson</p>
-              <p className="text-zinc-400 text-xs">Pro Plan</p>
+              <p className="text-zinc-400 text-xs">Open Source</p>
             </div>
           </div>
         </div>

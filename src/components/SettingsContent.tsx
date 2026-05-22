@@ -117,7 +117,7 @@ export default function SettingsContent({ initialUser }: Props) {
           </div>
         </div>
         <div className="inline-flex items-center px-3 py-1 bg-[#6bff8f] text-[#002109] rounded-full text-[12px] font-bold tracking-wider uppercase">
-          {user.plan} Plan
+          {user.plan === 'pro' ? 'Verified' : 'Community'} Account
         </div>
       </section>
 
