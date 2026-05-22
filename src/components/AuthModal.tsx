@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -8,9 +9,9 @@ interface AuthModalProps {
 }
 
 export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
 
   if (!isOpen) return null;
 
@@ -18,9 +19,10 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
     e.preventDefault();
     setIsLoading(true);
     // Simulate API call
-    await new Promise((resolve) => setTimeout(resolve, 1500));
+    await new Promise((resolve) => setTimeout(resolve, 800));
     setIsLoading(false);
-    setIsSuccess(true);
+    onClose();
+    router.push('/dashboard');
   };
 
   return (
@@ -39,61 +41,41 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             </button>
           </div>
 
-          {!isSuccess ? (
-            <>
-              <h2 className="text-3xl font-black font-['Manrope'] tracking-tight mb-2">Welcome back</h2>
-              <p className="text-zinc-500 mb-8">Enter your email to sign in to your account.</p>
+          <h2 className="text-3xl font-black font-['Manrope'] tracking-tight mb-2">Welcome back</h2>
+          <p className="text-zinc-500 mb-8">Enter your email to sign in to your account.</p>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
-                <div>
-                  <label htmlFor="email" className="block text-sm font-bold font-['Manrope'] uppercase tracking-wider text-zinc-400 mb-2 px-1">
-                    Email Address
-                  </label>
-                  <input
-                    id="email"
-                    type="email"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="name@company.com"
-                    className="w-full px-5 py-4 bg-zinc-50 border-2 border-zinc-100 rounded-2xl focus:border-black focus:bg-white outline-none transition-all font-medium"
-                  />
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="w-full py-4 bg-black text-white rounded-2xl font-bold font-['Manrope'] text-lg hover:bg-zinc-800 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                >
-                  {isLoading ? (
-                    <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-                  ) : (
-                    'Continue with Email'
-                  )}
-                </button>
-              </form>
-
-              <p className="mt-8 text-center text-sm text-zinc-400">
-                Don't have an account? <button className="text-black font-bold">Sign up</button>
-              </p>
-            </>
-          ) : (
-            <div className="text-center py-4">
-              <div className="w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-6">
-                <span className="material-symbols-outlined text-[40px]">check_circle</span>
-              </div>
-              <h2 className="text-3xl font-black font-['Manrope'] tracking-tight mb-2">Check your inbox</h2>
-              <p className="text-zinc-500 mb-8">
-                We've sent a magic link to <span className="font-bold text-black">{email}</span>.
-              </p>
-              <button
-                onClick={onClose}
-                className="w-full py-4 bg-black text-white rounded-2xl font-bold font-['Manrope'] text-lg hover:bg-zinc-800 transition-all"
-              >
-                Back to home
-              </button>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label htmlFor="email" className="block text-sm font-bold font-['Manrope'] uppercase tracking-wider text-zinc-400 mb-2 px-1">
+                Email Address
+              </label>
+              <input
+                id="email"
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="name@company.com"
+                className="w-full px-5 py-4 bg-zinc-50 border-2 border-zinc-100 rounded-2xl focus:border-black focus:bg-white outline-none transition-all font-medium"
+              />
             </div>
-          )}
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-4 bg-black text-white rounded-2xl font-bold font-['Manrope'] text-lg hover:bg-zinc-800 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+            >
+              {isLoading ? (
+                <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              ) : (
+                'Continue with Email'
+              )}
+            </button>
+          </form>
+
+          <p className="mt-8 text-center text-sm text-zinc-400">
+            Don't have an account? <button className="text-black font-bold">Sign up</button>
+          </p>
         </div>
         
         <div className="bg-zinc-50 p-6 border-t border-zinc-100 text-center">
