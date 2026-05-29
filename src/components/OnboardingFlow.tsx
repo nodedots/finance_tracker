@@ -70,20 +70,20 @@ export default function OnboardingFlow({ initialUser }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-[#f0f1f2] px-6 py-8">
+    <div className="min-h-screen bg-[#f0f1f2] px-4 py-6 sm:px-6 sm:py-8">
       <div className="max-w-3xl mx-auto">
         <div className="mb-8">
-          <div className="flex items-center justify-between gap-4 mb-6">
-            <Link href="/" className="flex items-center gap-3 hover:opacity-80 transition-opacity">
+          <div className="mb-6 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <Link href="/" className="flex min-w-0 items-center gap-3 hover:opacity-80 transition-opacity">
             <div className="w-11 h-11 rounded-xl bg-black text-white flex items-center justify-center">
               <span className="material-symbols-outlined">account_balance_wallet</span>
             </div>
-            <div>
-              <h1 className="font-['Manrope'] font-black text-3xl text-zinc-900">Set up Fintrack</h1>
+            <div className="min-w-0">
+              <h1 className="font-['Manrope'] font-black text-2xl sm:text-3xl text-zinc-900">Set up Fintrack</h1>
               <p className="text-sm text-zinc-500">Connect your transaction sources in a few steps.</p>
             </div>
             </Link>
-            <Link href="/dashboard" className="hidden sm:inline-flex px-4 py-2 rounded-xl bg-white border border-zinc-100 text-sm font-semibold text-zinc-600 hover:bg-zinc-50">
+            <Link href="/dashboard" className="inline-flex px-4 py-2 rounded-xl bg-white border border-zinc-100 text-sm font-semibold text-zinc-600 hover:bg-zinc-50">
               Skip
             </Link>
           </div>
@@ -93,7 +93,7 @@ export default function OnboardingFlow({ initialUser }: Props) {
                 key={item.label}
                 type="button"
                 onClick={() => setStep(index)}
-                className={`flex items-center justify-center gap-2 rounded-xl py-3 text-xs font-black uppercase tracking-widest transition-colors ${
+                className={`flex items-center justify-center gap-1 rounded-xl px-2 py-3 text-[11px] font-black uppercase tracking-[0.16em] transition-colors sm:gap-2 sm:text-xs sm:tracking-widest ${
                   index === step ? 'bg-black text-white' : 'bg-white text-zinc-400 border border-zinc-100'
                 }`}
               >
@@ -157,7 +157,7 @@ export default function OnboardingFlow({ initialUser }: Props) {
                 connected={Boolean(user?.cameraEnabled)}
                 onClick={() => patchUser({ cameraEnabled: !user?.cameraEnabled })}
               />
-              <div className="flex gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row">
                 <button onClick={() => setStep(0)} className="flex-1 bg-zinc-100 text-zinc-700 py-4 rounded-xl font-semibold">Back</button>
                 <button onClick={() => setStep(2)} className="flex-1 bg-black text-white py-4 rounded-xl font-semibold">Continue</button>
               </div>
@@ -173,12 +173,12 @@ export default function OnboardingFlow({ initialUser }: Props) {
                   Start with receipt capture now, then add real email/SMS integrations when you are ready for OAuth, permissions, and privacy review.
                 </p>
               </div>
-              <div className="grid sm:grid-cols-3 gap-3">
+              <div className="grid gap-3 sm:grid-cols-3">
                 <StatusPill label="Email" active={Boolean(user?.gmailLinked)} />
                 <StatusPill label="SMS" active={Boolean(user?.smsActive)} />
                 <StatusPill label="Camera" active={Boolean(user?.cameraEnabled)} />
               </div>
-              <div className="flex gap-3">
+              <div className="flex flex-col gap-3 sm:flex-row">
                 <button onClick={() => setStep(1)} className="flex-1 bg-zinc-100 text-zinc-700 py-4 rounded-xl font-semibold">Back</button>
                 <button onClick={finish} className="flex-1 bg-black text-white py-4 rounded-xl font-semibold">Go to Dashboard</button>
               </div>
@@ -208,11 +208,11 @@ function ConnectionCard({
   onClick: () => void;
 }) {
   return (
-    <button type="button" onClick={onClick} className="w-full text-left flex items-center gap-4 p-4 rounded-2xl border border-zinc-100 hover:bg-zinc-50 transition-colors">
+    <button type="button" onClick={onClick} className="w-full text-left flex items-start gap-4 p-4 rounded-2xl border border-zinc-100 hover:bg-zinc-50 transition-colors">
       <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${connected ? 'bg-[#009844] text-white' : 'bg-zinc-100 text-zinc-600'}`}>
         <span className="material-symbols-outlined">{icon}</span>
       </div>
-      <div className="flex-1">
+      <div className="min-w-0 flex-1">
         <p className="font-semibold text-sm text-zinc-900">{title}</p>
         <p className="text-xs text-zinc-500 mt-1">{detail}</p>
       </div>

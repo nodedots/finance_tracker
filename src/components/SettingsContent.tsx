@@ -66,16 +66,22 @@ export default function SettingsContent({ initialUser }: Props) {
     }
   }
 
+  function logout() {
+    window.localStorage.removeItem('fintrack:onboarded');
+    router.push('/');
+    router.refresh();
+  }
+
   return (
     <div className="space-y-8">
       {/* Profile */}
       <section className="bg-white rounded-2xl p-6 border border-zinc-100">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex items-center gap-4">
+        <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="flex min-w-0 items-center gap-4">
             <div className="w-16 h-16 rounded-full bg-black flex items-center justify-center text-white">
               <span className="material-symbols-outlined text-[32px]">account_circle</span>
             </div>
-            <div>
+            <div className="min-w-0 flex-1">
               {editing ? (
                 <div className="space-y-2">
                   <input
@@ -103,7 +109,7 @@ export default function SettingsContent({ initialUser }: Props) {
               )}
             </div>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 self-end sm:self-auto">
             {editing ? (
               <>
                 <button onClick={() => setEditing(false)} className="px-3 py-1.5 text-sm font-semibold text-zinc-500 hover:text-zinc-700">Cancel</button>
@@ -128,13 +134,27 @@ export default function SettingsContent({ initialUser }: Props) {
         <div className="inline-flex items-center px-3 py-1 bg-[#6bff8f] text-[#002109] rounded-full text-[12px] font-bold tracking-wider uppercase">
           {user.plan === 'pro' ? 'Verified' : 'Community'} Account
         </div>
+        <div className="mt-6 pt-5 border-t border-zinc-100 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+          <div>
+            <p className="font-semibold text-sm text-zinc-900">Session</p>
+            <p className="text-xs text-zinc-500 mt-1">Leave this profile and return to the landing page.</p>
+          </div>
+          <button
+            type="button"
+            onClick={logout}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-zinc-100 text-zinc-700 hover:bg-zinc-200 text-sm font-semibold transition-colors"
+          >
+            <span className="material-symbols-outlined text-[18px]">logout</span>
+            Log out
+          </button>
+        </div>
       </section>
 
       {/* Data Sources */}
       <section>
         <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-3 px-1">Data Sources</h3>
         <div className="bg-white rounded-2xl border border-zinc-100 divide-y divide-zinc-100">
-          <div className="flex items-center justify-between p-4">
+          <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-xl bg-red-50 text-red-600 flex items-center justify-center">
                 <span className="material-symbols-outlined">mail</span>
@@ -146,7 +166,7 @@ export default function SettingsContent({ initialUser }: Props) {
             </div>
             <Toggle checked={user.gmailLinked} onChange={v => updateField('gmailLinked', v)} />
           </div>
-          <div className="flex items-center justify-between p-4">
+          <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center">
                 <span className="material-symbols-outlined">sms</span>
@@ -158,7 +178,7 @@ export default function SettingsContent({ initialUser }: Props) {
             </div>
             <Toggle checked={user.smsActive} onChange={v => updateField('smsActive', v)} />
           </div>
-          <div className="flex items-center justify-between p-4">
+          <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-xl bg-zinc-100 text-zinc-900 flex items-center justify-center">
                 <span className="material-symbols-outlined">camera_alt</span>
@@ -177,7 +197,7 @@ export default function SettingsContent({ initialUser }: Props) {
       <section>
         <h3 className="text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-3 px-1">Preferences</h3>
         <div className="bg-white rounded-2xl border border-zinc-100 divide-y divide-zinc-100">
-          <div className="flex items-center justify-between p-4">
+          <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-xl bg-black text-white flex items-center justify-center">
                 <span className="material-symbols-outlined">payments</span>
@@ -190,7 +210,7 @@ export default function SettingsContent({ initialUser }: Props) {
             <select
               value={user.currency}
               onChange={e => updateField('currency', e.target.value)}
-              className="bg-zinc-50 border border-zinc-200 rounded-lg py-1.5 px-3 text-sm text-zinc-700 focus:ring-2 focus:ring-black"
+              className="w-full sm:w-auto bg-zinc-50 border border-zinc-200 rounded-lg py-2 px-3 text-sm text-zinc-700 focus:ring-2 focus:ring-black"
             >
               <option value="NGN">NGN</option>
               <option value="GHS">GHS</option>
@@ -201,7 +221,7 @@ export default function SettingsContent({ initialUser }: Props) {
               <option value="GBP">GBP</option>
             </select>
           </div>
-          <div className="flex items-center justify-between p-4">
+          <div className="flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-xl bg-black text-white flex items-center justify-center">
                 <span className="material-symbols-outlined">notifications_active</span>

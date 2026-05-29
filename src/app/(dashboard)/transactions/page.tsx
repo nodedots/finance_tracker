@@ -30,14 +30,14 @@ export default async function TransactionsPage() {
   });
 
   return (
-    <div className="min-h-screen pb-24 md:pb-8">
-      <header className="bg-white border-b border-zinc-100 px-6 py-5 md:px-10 md:py-6">
+    <div className="min-h-screen pb-6 md:pb-8">
+      <header className="bg-white border-b border-zinc-100 px-4 py-4 sm:px-6 md:px-10 md:py-6">
         <div className="max-w-5xl mx-auto">
           <h1 className="font-['Manrope'] font-bold text-2xl md:text-3xl text-zinc-900">Transactions</h1>
           <p className="text-zinc-500 text-sm mt-1">{transactions.length} transactions total</p>
         </div>
       </header>
-      <div className="max-w-5xl mx-auto px-6 md:px-10 py-6">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 md:px-10 py-5 md:py-6">
         <TransactionsList
           initialTransactions={JSON.parse(JSON.stringify(transactions))}
           categories={JSON.parse(JSON.stringify(categories))}

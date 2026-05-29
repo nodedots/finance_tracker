@@ -158,7 +158,7 @@ export default function ReceiptCapture({ categories }: Props) {
                 </div>
               )}
             </button>
-            <div className="mt-3 flex items-center justify-between">
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-xs text-zinc-400">
                 {status === 'scanning'
                   ? 'Reading receipt fields...'

@@ -114,24 +114,24 @@ export default function TransactionsList({ initialTransactions, categories, curr
       {Object.entries(grouped).map(([date, txns]) => (
         <div key={date}>
           <p className="text-xs font-semibold text-zinc-400 uppercase tracking-widest mb-3">{date}</p>
-          <div className="bg-white rounded-2xl border border-zinc-100 divide-y divide-zinc-100">
+          <div className="bg-white rounded-2xl border border-zinc-100 divide-y divide-zinc-100 overflow-hidden">
             {txns.map(txn => {
               const src = sourceIcons[txn.source] || sourceIcons['manual'];
               return (
-                <div key={txn.id} className="flex items-center justify-between p-4 hover:bg-zinc-50 transition-colors">
-                  <div className="flex items-center gap-4">
+                <div key={txn.id} className="flex items-start justify-between gap-3 p-4 hover:bg-zinc-50 transition-colors">
+                  <div className="flex min-w-0 items-center gap-3 sm:gap-4">
                     <div className="w-11 h-11 rounded-full flex items-center justify-center relative" style={{ backgroundColor: `${txn.category.color}15` }}>
                       <span className="material-symbols-outlined" style={{ color: txn.category.color }}>{txn.category.icon}</span>
                       <div className="absolute -top-1 -right-1 bg-white p-0.5 rounded-full shadow-sm border border-zinc-50">
                         <span className={`material-symbols-outlined text-[12px] ${src.color}`} style={{ fontVariationSettings: "'FILL' 1" }}>{src.icon}</span>
                       </div>
                     </div>
-                    <div>
-                      <p className="font-semibold text-sm text-zinc-900">{txn.merchant}</p>
-                      <p className="text-xs text-zinc-400">{txn.category.name} &middot; {formatTime(txn.createdAt)}</p>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-sm text-zinc-900 truncate">{txn.merchant}</p>
+                      <p className="text-xs text-zinc-400 break-words">{txn.category.name} &middot; {formatTime(txn.createdAt)}</p>
                     </div>
                   </div>
-                  <div className="text-right">
+                  <div className="shrink-0 text-right">
                     <p className={`font-semibold text-sm ${txn.type === 'income' ? 'text-[#009844]' : 'text-zinc-900'}`}>
                       {txn.type === 'income' ? '+' : '-'}{formatCurrency(txn.amount, currency)}
                     </p>

@@ -32,8 +32,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-300">
       <div className="bg-white w-full max-w-md rounded-[24px] shadow-2xl overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
-        <div className="p-8">
-          <div className="flex justify-between items-center mb-8">
+        <div className="p-5 sm:p-8">
+          <div className="flex justify-between items-center mb-6 sm:mb-8">
             <Link href="/" onClick={onClose} className="w-12 h-12 rounded-2xl bg-black flex items-center justify-center text-white hover:bg-zinc-800 transition-colors">
               <span className="material-symbols-outlined text-[28px]">account_balance_wallet</span>
             </Link>
@@ -45,8 +45,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
             </button>
           </div>
 
-          <h2 className="text-3xl font-black font-['Manrope'] tracking-tight mb-2">Welcome back</h2>
-          <p className="text-zinc-500 mb-8">Enter your email to sign in to your account.</p>
+          <h2 className="text-2xl sm:text-3xl font-black font-['Manrope'] tracking-tight mb-2">Welcome back</h2>
+          <p className="text-zinc-500 mb-6 sm:mb-8">Enter your email to sign in to your account.</p>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <div>
@@ -82,9 +82,9 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           </p>
         </div>
         
-        <div className="bg-zinc-50 p-6 border-t border-zinc-100 text-center">
+        <div className="bg-zinc-50 p-5 sm:p-6 border-t border-zinc-100 text-center">
           <p className="text-xs text-zinc-400 leading-relaxed px-4">
-            By continuing, you agree to Fintrack&apos;s <span className="underline cursor-pointer">Terms of Service</span> and <span className="underline cursor-pointer">Privacy Policy</span>.
+            By continuing, you agree to Fintrack&apos;s <Link href="/legal" onClick={onClose} className="underline">Terms of Service</Link> and <Link href="/legal" onClick={onClose} className="underline">Privacy Policy</Link>.
           </p>
         </div>
       </div>

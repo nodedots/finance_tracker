@@ -126,7 +126,7 @@ export default function AddTransactionForm({ categories }: Props) {
       {/* Category */}
       <div>
         <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-2">Category</label>
-        <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-2">
           {categories.map(cat => (
             <button
               key={cat.id}

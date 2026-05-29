@@ -62,15 +62,15 @@ export default async function Dashboard() {
   const topCategories = Object.values(categorySpending).sort((a, b) => b.total - a.total).slice(0, 4);
 
   return (
-    <div className="min-h-screen pb-24 md:pb-8">
+    <div className="min-h-screen pb-6 md:pb-8">
       {/* Header */}
-      <header className="bg-white border-b border-zinc-100 px-6 py-5 md:px-10 md:py-6">
-        <div className="max-w-5xl mx-auto flex items-center justify-between">
-          <div>
+      <header className="bg-white border-b border-zinc-100 px-4 py-4 sm:px-6 md:px-10 md:py-6">
+        <div className="max-w-5xl mx-auto flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
             <p className="text-zinc-500 text-sm font-medium">Welcome back,</p>
-            <h1 className="font-['Manrope'] font-black text-3xl md:text-4xl text-zinc-900 tracking-tight">{user.name}</h1>
+            <h1 className="font-['Manrope'] font-black text-2xl sm:text-3xl md:text-4xl text-zinc-900 tracking-tight break-words">{user.name}</h1>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 sm:gap-3">
             {user.smsActive && (
               <div className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-50 border border-zinc-100">
                 <span className="w-2 h-2 rounded-full bg-[#009844]" />
@@ -90,16 +90,16 @@ export default async function Dashboard() {
         </div>
       </header>
 
-      <div className="max-w-5xl mx-auto px-6 md:px-10 py-6 md:py-8 space-y-8">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 md:px-10 py-5 md:py-8 space-y-6 md:space-y-8">
         {/* Financial Snapshot */}
         <section className="opacity-0 animate-fade-in-up" style={{ animationDelay: '100ms' }}>
-          <div className="bg-black rounded-3xl p-6 md:p-8 text-white shadow-2xl shadow-black/20 relative overflow-hidden">
+          <div className="bg-black rounded-3xl p-5 sm:p-6 md:p-8 text-white shadow-2xl shadow-black/20 relative overflow-hidden">
             <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
             <p className="text-sm opacity-70 mb-1 font-semibold">Total Balance</p>
-            <h2 className="text-4xl md:text-5xl font-semibold font-['Manrope'] tracking-tight mb-6">
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-semibold font-['Manrope'] tracking-tight mb-5 md:mb-6 break-words">
               {formatCurrency(balance, user.currency)}
             </h2>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3 md:gap-4">
               <div className="bg-white/10 rounded-2xl p-4 backdrop-blur-sm">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="material-symbols-outlined text-sm">arrow_downward</span>
@@ -126,8 +126,8 @@ export default async function Dashboard() {
         </section>
 
         {/* Insights + Top Spending - Bento Grid */}
-        <section className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 opacity-0 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
-          <div className="bg-[#8692fd] rounded-[32px] p-6 flex flex-col justify-between aspect-square md:aspect-auto md:h-48 group hover:scale-[1.02] transition-transform duration-500">
+        <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 opacity-0 animate-fade-in-up" style={{ animationDelay: '200ms' }}>
+          <div className="bg-[#8692fd] rounded-[32px] p-5 md:p-6 flex min-h-[168px] flex-col justify-between md:h-48 group hover:scale-[1.02] transition-transform duration-500">
             <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-sm">
               <span className="material-symbols-outlined text-[#16238e] text-2xl">savings</span>
             </div>
@@ -136,7 +136,7 @@ export default async function Dashboard() {
               <p className="font-['Manrope'] font-black text-3xl text-[#16238e]">{savingsRate}%</p>
             </div>
           </div>
-          <div className="bg-zinc-900 rounded-[32px] p-6 flex flex-col justify-between aspect-square md:aspect-auto md:h-48 group hover:scale-[1.02] transition-transform duration-500">
+          <div className="bg-zinc-900 rounded-[32px] p-5 md:p-6 flex min-h-[168px] flex-col justify-between md:h-48 group hover:scale-[1.02] transition-transform duration-500">
             <div className="w-12 h-12 bg-white/10 rounded-2xl flex items-center justify-center backdrop-blur-sm">
               <span className="material-symbols-outlined text-white text-2xl">auto_awesome</span>
             </div>
@@ -146,7 +146,7 @@ export default async function Dashboard() {
             </div>
           </div>
           {topCategories.slice(0, 2).map((cat) => (
-            <div key={cat.name} className="bg-white rounded-[32px] p-6 border border-zinc-100 flex flex-col justify-between aspect-square md:aspect-auto md:h-48 group hover:scale-[1.02] transition-transform duration-500 shadow-sm hover:shadow-xl hover:shadow-zinc-200/50">
+            <div key={cat.name} className="bg-white rounded-[32px] p-5 md:p-6 border border-zinc-100 flex min-h-[168px] flex-col justify-between md:h-48 group hover:scale-[1.02] transition-transform duration-500 shadow-sm hover:shadow-xl hover:shadow-zinc-200/50">
               <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${cat.color}15` }}>
                 <span className="material-symbols-outlined text-2xl" style={{ color: cat.color }}>{cat.icon}</span>
               </div>
@@ -160,7 +160,7 @@ export default async function Dashboard() {
 
         {/* Recent Activity */}
         <section className="opacity-0 animate-fade-in-up" style={{ animationDelay: '300ms' }}>
-          <div className="flex justify-between items-end mb-4">
+          <div className="mb-4 flex items-end justify-between gap-3">
             <h2 className="font-['Manrope'] font-semibold text-xl md:text-2xl">Recent Activity</h2>
             <Link href="/transactions" className="text-[#4854bb] font-semibold text-sm">
               View All
@@ -179,21 +179,21 @@ export default async function Dashboard() {
             ) : recentTransactions.map((txn) => {
               const src = sourceIcons[txn.source] || sourceIcons['manual'];
               return (
-                <div key={txn.id} className="flex items-center justify-between p-4 hover:bg-zinc-50 transition-colors">
-                  <div className="flex items-center gap-4">
+                <div key={txn.id} className="flex items-start justify-between gap-3 p-4 hover:bg-zinc-50 transition-colors">
+                  <div className="flex min-w-0 items-center gap-3 sm:gap-4">
                     <div className="w-11 h-11 rounded-xl flex items-center justify-center relative" style={{ backgroundColor: `${txn.category.color}15` }}>
                       <span className="material-symbols-outlined" style={{ color: txn.category.color }}>{txn.category.icon}</span>
                       <div className="absolute -top-1 -right-1 bg-white p-0.5 rounded-full shadow-sm border border-zinc-50">
                         <span className={`material-symbols-outlined text-[12px] ${src.color}`} style={{ fontVariationSettings: "'FILL' 1" }}>{src.icon}</span>
                       </div>
                     </div>
-                    <div>
-                      <p className="font-semibold text-sm text-zinc-900">{txn.merchant}</p>
-                      <p className="text-xs text-zinc-400">{txn.category.name} &middot; {timeAgo(txn.createdAt)}</p>
+                    <div className="min-w-0">
+                      <p className="font-semibold text-sm text-zinc-900 truncate">{txn.merchant}</p>
+                      <p className="text-xs text-zinc-400 break-words">{txn.category.name} &middot; {timeAgo(txn.createdAt)}</p>
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className={`font-semibold text-sm ${txn.type === 'income' ? 'text-[#009844]' : 'text-zinc-900'}`}>
+                  <div className="shrink-0 text-right">
+                    <p className={`font-semibold text-sm sm:text-base ${txn.type === 'income' ? 'text-[#009844]' : 'text-zinc-900'}`}>
                       {txn.type === 'income' ? '+' : '-'}{formatCurrency(txn.amount, user.currency)}
                     </p>
                     <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-tight">{txn.status}</p>

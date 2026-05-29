@@ -63,14 +63,14 @@ export default function Sidebar({ user }: { user: SidebarUser }) {
       </aside>
 
       {/* Mobile bottom nav */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-zinc-200 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] flex justify-around items-center h-20 px-2 pb-safe">
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white border-t border-zinc-200 shadow-[0_-4px_20px_rgba(0,0,0,0.03)] flex items-center h-[72px] px-1 pb-safe">
         {navItems.map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center justify-center gap-0.5 py-2 px-3 rounded-xl transition-all ${
+              className={`flex flex-1 min-w-0 flex-col items-center justify-center gap-0.5 py-2 px-1 rounded-xl transition-all ${
                 isActive
                   ? 'text-black'
                   : 'text-zinc-400 hover:text-zinc-700'
@@ -79,7 +79,7 @@ export default function Sidebar({ user }: { user: SidebarUser }) {
               <span className="material-symbols-outlined text-[24px]" style={isActive ? { fontVariationSettings: "'FILL' 1" } : undefined}>
                 {item.icon}
               </span>
-              <span className="font-['Manrope'] text-[10px] font-bold uppercase tracking-widest">
+              <span className="font-['Manrope'] text-[9px] font-bold uppercase tracking-[0.16em] text-center">
                 {item.label}
               </span>
             </Link>
