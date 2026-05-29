@@ -41,8 +41,8 @@ export default function LandingPage() {
               <span className="text-[11px] font-black font-['Manrope'] uppercase tracking-[0.2em] text-zinc-500">Finance Management</span>
             </div>
             <h1 className="text-6xl md:text-8xl font-black font-['Manrope'] tracking-tight leading-[0.9] mb-8">
-              Finance Management on <br />
-              <span className="text-zinc-300">Autopilot.</span>
+              Your money records, <br />
+              <span className="text-zinc-300">handled automatically.</span>
             </h1>
             <p className="text-xl text-zinc-500 leading-relaxed mb-10 max-w-lg">
               Fintrack automatically captures transactions from bank alerts, email receipts, SMS, and scanned receipts. No manual entry, just clear insights.
@@ -151,8 +151,15 @@ export default function LandingPage() {
         <div className="mt-20 pt-10 border-t border-zinc-100 flex flex-col md:flex-row items-center justify-between max-w-7xl mx-auto gap-6">
           <p className="text-sm text-zinc-400">© 2026 Fintrack Inc. All rights reserved.</p>
           <div className="flex gap-8">
-            <Link href="https://github.com/sgukobong/fintrack_app" className="text-sm font-bold text-zinc-400 hover:text-black transition-colors">GitHub</Link>
-            <Link href="#" className="text-sm font-bold text-zinc-400 hover:text-black transition-colors">Legal</Link>
+            <Link
+              href="https://github.com/sgukobong/fintrack_app"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-sm font-bold text-zinc-400 hover:text-black transition-colors"
+            >
+              GitHub
+            </Link>
+            <Link href="/legal" className="text-sm font-bold text-zinc-400 hover:text-black transition-colors">Legal</Link>
           </div>
         </div>
       </footer>
