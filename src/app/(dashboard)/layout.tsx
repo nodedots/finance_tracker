@@ -1,13 +1,16 @@
 import Sidebar from "@/components/Sidebar";
+import { prisma } from "@/lib/prisma";
 
-export default function DashboardLayout({
+export default async function DashboardLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const user = await prisma.user.findFirst();
+
   return (
     <div className="flex min-h-screen bg-[#f0f1f2]">
-      <Sidebar />
+      <Sidebar user={user ? JSON.parse(JSON.stringify(user)) : null} />
       <main className="flex-1 md:ml-64">
         {children}
       </main>

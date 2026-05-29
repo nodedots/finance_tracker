@@ -1,9 +1,22 @@
 import { prisma } from '@/lib/prisma';
 import SettingsContent from '@/components/SettingsContent';
+import Link from 'next/link';
 
 export default async function SettingsPage() {
   const user = await prisma.user.findFirst();
-  if (!user) return <p className="p-8">No user found.</p>;
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6">
+        <div className="max-w-md text-center bg-white border border-zinc-100 rounded-2xl p-8">
+          <h1 className="font-['Manrope'] font-bold text-2xl text-zinc-900 mb-2">No account yet</h1>
+          <p className="text-sm text-zinc-500 mb-6">Create your account to manage preferences and connections.</p>
+          <Link href="/onboarding" className="inline-flex justify-center w-full bg-black text-white py-3 rounded-xl font-semibold">
+            Start Setup
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen pb-24 md:pb-8">

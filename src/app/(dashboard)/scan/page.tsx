@@ -1,9 +1,22 @@
 import { prisma } from '@/lib/prisma';
 import ReceiptCapture from '@/components/ReceiptCapture';
+import Link from 'next/link';
 
 export default async function AddTransactionPage() {
   const user = await prisma.user.findFirst();
-  if (!user) return <p className="p-8">No user found.</p>;
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6">
+        <div className="max-w-md text-center bg-white border border-zinc-100 rounded-2xl p-8">
+          <h1 className="font-['Manrope'] font-bold text-2xl text-zinc-900 mb-2">Set up capture first</h1>
+          <p className="text-sm text-zinc-500 mb-6">Create your account and enable capture channels before adding records.</p>
+          <Link href="/onboarding" className="inline-flex justify-center w-full bg-black text-white py-3 rounded-xl font-semibold">
+            Start Setup
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const categories = await prisma.category.findMany({
     where: { userId: user.id },

@@ -38,10 +38,10 @@ export default function LandingPage() {
           <div className="animate-fade-in-up">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-100 border border-zinc-200 mb-8">
               <span className="flex h-2 w-2 rounded-full bg-blue-600 animate-pulse"></span>
-              <span className="text-[11px] font-black font-['Manrope'] uppercase tracking-[0.2em] text-zinc-500">AI-powered finance capture</span>
+              <span className="text-[11px] font-black font-['Manrope'] uppercase tracking-[0.2em] text-zinc-500">Finance Management</span>
             </div>
             <h1 className="text-6xl md:text-8xl font-black font-['Manrope'] tracking-tight leading-[0.9] mb-8">
-              Finance on <br />
+              Finance Management on <br />
               <span className="text-zinc-300">Autopilot.</span>
             </h1>
             <p className="text-xl text-zinc-500 leading-relaxed mb-10 max-w-lg">

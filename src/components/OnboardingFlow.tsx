@@ -15,7 +15,7 @@ interface User {
 }
 
 interface Props {
-  initialUser: User;
+  initialUser: User | null;
 }
 
 const steps = [
@@ -28,16 +28,17 @@ export default function OnboardingFlow({ initialUser }: Props) {
   const router = useRouter();
   const [step, setStep] = useState(0);
   const [user, setUser] = useState(initialUser);
-  const [name, setName] = useState(initialUser.name);
-  const [email, setEmail] = useState(initialUser.email);
-  const [location, setLocation] = useState(initialUser.location);
+  const [name, setName] = useState(initialUser?.name || '');
+  const [email, setEmail] = useState(initialUser?.email || '');
+  const [location, setLocation] = useState(initialUser?.location || '');
   const [saving, setSaving] = useState(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
 
   async function patchUser(data: Partial<User>) {
     setSaving(true);
     try {
       const res = await fetch('/api/user', {
-        method: 'PATCH',
+        method: user ? 'PATCH' : 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(data),
       });
@@ -51,6 +52,11 @@ export default function OnboardingFlow({ initialUser }: Props) {
   }
 
   async function saveProfile() {
+    if (!email.trim()) {
+      setProfileError('Email is required to create your account.');
+      return;
+    }
+    setProfileError(null);
     await patchUser({ name, email, location });
     setStep(1);
   }
@@ -107,18 +113,19 @@ export default function OnboardingFlow({ initialUser }: Props) {
               </div>
               <label className="block">
                 <span className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">Name</span>
-                <input value={name} onChange={e => setName(e.target.value)} className="mt-2 w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 px-4 text-sm text-zinc-900 focus:ring-2 focus:ring-black" />
+                <input value={name} onChange={e => setName(e.target.value)} placeholder="Your name" className="mt-2 w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 px-4 text-sm text-zinc-900 focus:ring-2 focus:ring-black" />
               </label>
               <label className="block">
                 <span className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">Email</span>
-                <input value={email} onChange={e => setEmail(e.target.value)} className="mt-2 w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 px-4 text-sm text-zinc-900 focus:ring-2 focus:ring-black" />
+                <input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="you@example.com" className="mt-2 w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 px-4 text-sm text-zinc-900 focus:ring-2 focus:ring-black" />
               </label>
               <label className="block">
                 <span className="text-xs font-semibold text-zinc-500 uppercase tracking-widest">Location</span>
-                <input value={location} onChange={e => setLocation(e.target.value)} className="mt-2 w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 px-4 text-sm text-zinc-900 focus:ring-2 focus:ring-black" />
+                <input value={location} onChange={e => setLocation(e.target.value)} placeholder="Optional" className="mt-2 w-full bg-zinc-50 border border-zinc-200 rounded-xl py-3 px-4 text-sm text-zinc-900 focus:ring-2 focus:ring-black" />
               </label>
+              {profileError && <p className="text-sm font-semibold text-red-600">{profileError}</p>}
               <button onClick={saveProfile} disabled={saving} className="w-full bg-black text-white py-4 rounded-xl font-semibold disabled:opacity-50">
-                {saving ? 'Saving...' : 'Continue'}
+                {saving ? 'Saving...' : user ? 'Continue' : 'Create Account'}
               </button>
             </div>
           )}
@@ -132,23 +139,23 @@ export default function OnboardingFlow({ initialUser }: Props) {
               <ConnectionCard
                 icon="mail"
                 title="Email receipts"
-                detail="Prototype: marks Gmail as connected. Real build uses OAuth or a forward-to-inbox address."
-                connected={user.gmailLinked}
-                onClick={() => patchUser({ gmailLinked: !user.gmailLinked })}
+                detail="Enable receipt intake for forwarded emails or a future OAuth inbox connection."
+                connected={Boolean(user?.gmailLinked)}
+                onClick={() => patchUser({ gmailLinked: !user?.gmailLinked })}
               />
               <ConnectionCard
                 icon="sms"
                 title="Bank SMS alerts"
-                detail="Prototype: enables SMS parsing. Real build uses Android SMS permission, manual forwarding, or provider webhooks."
-                connected={user.smsActive}
-                onClick={() => patchUser({ smsActive: !user.smsActive })}
+                detail="Enable alert capture for pasted, forwarded, or mobile-permission SMS records."
+                connected={Boolean(user?.smsActive)}
+                onClick={() => patchUser({ smsActive: !user?.smsActive })}
               />
               <ConnectionCard
                 icon="photo_camera"
                 title="Receipt camera"
-                detail="Prototype: enables camera/upload receipt capture for local transaction entry."
-                connected={user.cameraEnabled}
-                onClick={() => patchUser({ cameraEnabled: !user.cameraEnabled })}
+                detail="Enable receipt capture with image extraction and editable review before saving."
+                connected={Boolean(user?.cameraEnabled)}
+                onClick={() => patchUser({ cameraEnabled: !user?.cameraEnabled })}
               />
               <div className="flex gap-3">
                 <button onClick={() => setStep(0)} className="flex-1 bg-zinc-100 text-zinc-700 py-4 rounded-xl font-semibold">Back</button>
@@ -167,9 +174,9 @@ export default function OnboardingFlow({ initialUser }: Props) {
                 </p>
               </div>
               <div className="grid sm:grid-cols-3 gap-3">
-                <StatusPill label="Email" active={user.gmailLinked} />
-                <StatusPill label="SMS" active={user.smsActive} />
-                <StatusPill label="Camera" active={user.cameraEnabled} />
+                <StatusPill label="Email" active={Boolean(user?.gmailLinked)} />
+                <StatusPill label="SMS" active={Boolean(user?.smsActive)} />
+                <StatusPill label="Camera" active={Boolean(user?.cameraEnabled)} />
               </div>
               <div className="flex gap-3">
                 <button onClick={() => setStep(1)} className="flex-1 bg-zinc-100 text-zinc-700 py-4 rounded-xl font-semibold">Back</button>

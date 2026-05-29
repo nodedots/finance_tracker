@@ -22,7 +22,20 @@ const sourceIcons: Record<string, { icon: string; color: string }> = {
 
 export default async function Dashboard() {
   const user = await prisma.user.findFirst();
-  if (!user) return <p className="p-8">No user found. Please seed the database.</p>;
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-6">
+        <div className="max-w-md text-center bg-white border border-zinc-100 rounded-2xl p-8">
+          <span className="material-symbols-outlined text-5xl text-zinc-300 mb-4 block">account_circle</span>
+          <h1 className="font-['Manrope'] font-bold text-2xl text-zinc-900 mb-2">Create your account</h1>
+          <p className="text-sm text-zinc-500 mb-6">Set up your profile and capture sources before recording transactions.</p>
+          <Link href="/onboarding" className="inline-flex justify-center w-full bg-black text-white py-3 rounded-xl font-semibold">
+            Start Setup
+          </Link>
+        </div>
+      </div>
+    );
+  }
 
   const transactions = await prisma.transaction.findMany({
     where: { userId: user.id },
@@ -154,7 +167,16 @@ export default async function Dashboard() {
             </Link>
           </div>
           <div className="bg-white rounded-2xl border border-zinc-100 divide-y divide-zinc-100">
-            {recentTransactions.map((txn) => {
+            {recentTransactions.length === 0 ? (
+              <div className="p-8 text-center">
+                <span className="material-symbols-outlined text-5xl text-zinc-300 mb-3 block">receipt_long</span>
+                <p className="font-semibold text-zinc-900">No transactions yet</p>
+                <p className="text-sm text-zinc-500 mt-1 mb-5">Capture a receipt or add your first transaction manually.</p>
+                <Link href="/scan" className="inline-flex px-5 py-3 bg-black text-white rounded-xl font-semibold text-sm">
+                  Capture Transaction
+                </Link>
+              </div>
+            ) : recentTransactions.map((txn) => {
               const src = sourceIcons[txn.source] || sourceIcons['manual'];
               return (
                 <div key={txn.id} className="flex items-center justify-between p-4 hover:bg-zinc-50 transition-colors">

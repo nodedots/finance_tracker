@@ -10,7 +10,12 @@ const navItems = [
   { href: '/settings', label: 'Settings', icon: 'settings' },
 ];
 
-export default function Sidebar() {
+type SidebarUser = {
+  name: string;
+  plan: string;
+} | null;
+
+export default function Sidebar({ user }: { user: SidebarUser }) {
   const pathname = usePathname();
 
   return (
@@ -50,8 +55,8 @@ export default function Sidebar() {
               <span className="material-symbols-outlined text-[20px]">person</span>
             </div>
             <div className="text-sm">
-              <p className="font-semibold text-zinc-900">Amina Bello</p>
-              <p className="text-zinc-400 text-xs">Pro Account</p>
+              <p className="font-semibold text-zinc-900">{user?.name || 'Not set up'}</p>
+              <p className="text-zinc-400 text-xs">{user ? `${user.plan === 'pro' ? 'Pro' : 'Free'} Account` : 'Create account'}</p>
             </div>
           </div>
         </div>
