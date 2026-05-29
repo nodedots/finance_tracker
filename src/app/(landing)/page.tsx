@@ -130,8 +130,7 @@ export default function LandingPage() {
         <div className="mt-20 pt-10 border-t border-zinc-100 flex flex-col md:flex-row items-center justify-between max-w-7xl mx-auto gap-6">
           <p className="text-sm text-zinc-400">© 2026 Fintrack Inc. All rights reserved.</p>
           <div className="flex gap-8">
-            <Link href="#" className="text-sm font-bold text-zinc-400 hover:text-black transition-colors">Twitter</Link>
-            <Link href="#" className="text-sm font-bold text-zinc-400 hover:text-black transition-colors">GitHub</Link>
+            <Link href="https://github.com/sgukobong/fintrack_app" className="text-sm font-bold text-zinc-400 hover:text-black transition-colors">GitHub</Link>
             <Link href="#" className="text-sm font-bold text-zinc-400 hover:text-black transition-colors">Legal</Link>
           </div>
         </div>
