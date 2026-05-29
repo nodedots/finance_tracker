@@ -12,15 +12,16 @@ export default function LandingPage() {
       {/* Navigation */}
       <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-md border-b border-zinc-100">
         <div className="max-w-7xl mx-auto px-6 h-20 flex items-center justify-between">
-          <div className="flex items-center gap-2.5">
+          <Link href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
             <div className="w-9 h-9 rounded-xl bg-black flex items-center justify-center text-white">
               <span className="material-symbols-outlined text-[20px]">account_balance_wallet</span>
             </div>
             <span className="text-xl font-black font-['Manrope'] tracking-tighter">Fintrack</span>
-          </div>
+          </Link>
           <div className="hidden md:flex items-center gap-8">
             <Link href="#features" className="text-sm font-bold font-['Manrope'] uppercase tracking-widest text-zinc-500 hover:text-black transition-colors">Features</Link>
             <Link href="#security" className="text-sm font-bold font-['Manrope'] uppercase tracking-widest text-zinc-500 hover:text-black transition-colors">Security</Link>
+            <Link href="/dashboard" className="text-sm font-bold font-['Manrope'] uppercase tracking-widest text-zinc-500 hover:text-black transition-colors">Dashboard</Link>
           </div>
           <button 
             onClick={() => setIsAuthModalOpen(true)}
@@ -37,14 +38,14 @@ export default function LandingPage() {
           <div className="animate-fade-in-up">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-100 border border-zinc-200 mb-8">
               <span className="flex h-2 w-2 rounded-full bg-blue-600 animate-pulse"></span>
-              <span className="text-[11px] font-black font-['Manrope'] uppercase tracking-[0.2em] text-zinc-500">Built for Abuja money flows</span>
+              <span className="text-[11px] font-black font-['Manrope'] uppercase tracking-[0.2em] text-zinc-500">AI-powered finance capture</span>
             </div>
             <h1 className="text-6xl md:text-8xl font-black font-['Manrope'] tracking-tight leading-[0.9] mb-8">
               Finance on <br />
               <span className="text-zinc-300">Autopilot.</span>
             </h1>
             <p className="text-xl text-zinc-500 leading-relaxed mb-10 max-w-lg">
-              Fintrack automatically captures naira transactions from Nigerian bank alerts, email receipts, and SMS. No manual entry, just clear insights.
+              Fintrack automatically captures transactions from bank alerts, email receipts, SMS, and scanned receipts. No manual entry, just clear insights.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <button 
@@ -54,10 +55,10 @@ export default function LandingPage() {
                 Get Started Now
               </button>
               <Link 
-                href="/dashboard"
+                href="/onboarding"
                 className="px-10 py-5 bg-zinc-100 text-black rounded-2xl font-bold font-['Manrope'] text-lg hover:bg-zinc-200 transition-all text-center"
               >
-                Live Preview
+                Set Up Capture
               </Link>
             </div>
           </div>
@@ -103,8 +104,8 @@ export default function LandingPage() {
             <p className="text-sm font-bold font-['Manrope'] uppercase tracking-widest text-zinc-400">Accuracy Rate</p>
           </div>
           <div className="text-center">
-            <p className="text-4xl md:text-5xl font-black font-['Manrope'] mb-2">Abuja</p>
-            <p className="text-sm font-bold font-['Manrope'] uppercase tracking-widest text-zinc-400">Local Context</p>
+            <p className="text-4xl md:text-5xl font-black font-['Manrope'] mb-2">₦</p>
+            <p className="text-sm font-bold font-['Manrope'] uppercase tracking-widest text-zinc-400">Multi-source Capture</p>
           </div>
           <div className="text-center">
             <p className="text-4xl md:text-5xl font-black font-['Manrope'] mb-2">24/7</p>
@@ -114,6 +115,26 @@ export default function LandingPage() {
             <p className="text-4xl md:text-5xl font-black font-['Manrope'] mb-2">0</p>
             <p className="text-sm font-bold font-['Manrope'] uppercase tracking-widest text-zinc-400">Manual Entry</p>
           </div>
+        </div>
+      </section>
+
+      <section id="security" className="py-24 px-6">
+        <div className="max-w-7xl mx-auto grid md:grid-cols-3 gap-6">
+          <Link href="/onboarding" className="bg-white border border-zinc-100 rounded-2xl p-6 hover:shadow-xl hover:shadow-zinc-200/60 transition-all">
+            <span className="material-symbols-outlined text-3xl text-zinc-900 mb-4 block">hub</span>
+            <h2 className="font-['Manrope'] font-bold text-xl mb-2">Onboarding</h2>
+            <p className="text-sm text-zinc-500">Set profile, email, SMS, and camera capture preferences.</p>
+          </Link>
+          <Link href="/scan" className="bg-white border border-zinc-100 rounded-2xl p-6 hover:shadow-xl hover:shadow-zinc-200/60 transition-all">
+            <span className="material-symbols-outlined text-3xl text-zinc-900 mb-4 block">photo_camera</span>
+            <h2 className="font-['Manrope'] font-bold text-xl mb-2">Capture</h2>
+            <p className="text-sm text-zinc-500">Snap or upload receipts and turn them into records.</p>
+          </Link>
+          <Link href="/dashboard" className="bg-white border border-zinc-100 rounded-2xl p-6 hover:shadow-xl hover:shadow-zinc-200/60 transition-all">
+            <span className="material-symbols-outlined text-3xl text-zinc-900 mb-4 block">grid_view</span>
+            <h2 className="font-['Manrope'] font-bold text-xl mb-2">Dashboard</h2>
+            <p className="text-sm text-zinc-500">Review your financial snapshot and recent activity.</p>
+          </Link>
         </div>
       </section>
 

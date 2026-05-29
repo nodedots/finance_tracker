@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 
 interface AuthModalProps {
@@ -30,9 +31,9 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
       <div className="bg-white w-full max-w-md rounded-[24px] shadow-2xl overflow-hidden animate-in zoom-in-95 slide-in-from-bottom-4 duration-300">
         <div className="p-8">
           <div className="flex justify-between items-center mb-8">
-            <div className="w-12 h-12 rounded-2xl bg-black flex items-center justify-center text-white">
+            <Link href="/" onClick={onClose} className="w-12 h-12 rounded-2xl bg-black flex items-center justify-center text-white hover:bg-zinc-800 transition-colors">
               <span className="material-symbols-outlined text-[28px]">account_balance_wallet</span>
-            </div>
+            </Link>
             <button 
               onClick={onClose}
               className="w-10 h-10 rounded-full hover:bg-zinc-100 flex items-center justify-center text-zinc-400 transition-colors"
@@ -74,7 +75,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           </form>
 
           <p className="mt-8 text-center text-sm text-zinc-400">
-            Don&apos;t have an account? <button className="text-black font-bold">Sign up</button>
+            Don&apos;t have an account? <Link href="/onboarding" onClick={onClose} className="text-black font-bold">Set up Fintrack</Link>
           </p>
         </div>
         

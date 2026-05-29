@@ -56,7 +56,6 @@ export default async function Dashboard() {
           <div>
             <p className="text-zinc-500 text-sm font-medium">Welcome back,</p>
             <h1 className="font-['Manrope'] font-black text-3xl md:text-4xl text-zinc-900 tracking-tight">{user.name}</h1>
-            <p className="text-zinc-400 text-xs font-semibold mt-1">{user.location}</p>
           </div>
           <div className="flex items-center gap-3">
             {user.smsActive && (

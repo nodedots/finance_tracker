@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: 'grid_view' },
   { href: '/transactions', label: 'Transactions', icon: 'receipt_long' },
-  { href: '/scan', label: 'Add Transaction', icon: 'add_circle' },
+  { href: '/scan', label: 'Capture', icon: 'photo_camera' },
   { href: '/settings', label: 'Settings', icon: 'settings' },
 ];
 
@@ -17,12 +17,12 @@ export default function Sidebar() {
     <>
       {/* Desktop sidebar */}
       <aside className="hidden md:flex fixed left-0 top-0 h-screen w-64 bg-white border-r border-zinc-200 flex-col z-40">
-        <div className="p-6 flex items-center gap-3 border-b border-zinc-100">
+        <Link href="/" className="p-6 flex items-center gap-3 border-b border-zinc-100 hover:bg-zinc-50 transition-colors">
           <div className="w-10 h-10 rounded-xl bg-black flex items-center justify-center text-white">
             <span className="material-symbols-outlined text-[22px]">account_balance_wallet</span>
           </div>
           <span className="text-xl font-black tracking-tighter text-zinc-900 font-['Manrope']">Fintrack</span>
-        </div>
+        </Link>
         <nav className="flex-1 py-4 px-3 space-y-1">
           {navItems.map((item) => {
             const isActive = pathname === item.href;
@@ -51,7 +51,7 @@ export default function Sidebar() {
             </div>
             <div className="text-sm">
               <p className="font-semibold text-zinc-900">Amina Bello</p>
-              <p className="text-zinc-400 text-xs">Abuja, Nigeria</p>
+              <p className="text-zinc-400 text-xs">Pro Account</p>
             </div>
           </div>
         </div>
@@ -75,7 +75,7 @@ export default function Sidebar() {
                 {item.icon}
               </span>
               <span className="font-['Manrope'] text-[10px] font-bold uppercase tracking-widest">
-                {item.label === 'Add Transaction' ? 'Add' : item.label}
+                {item.label}
               </span>
             </Link>
           );
