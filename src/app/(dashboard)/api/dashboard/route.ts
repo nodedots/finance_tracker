@@ -40,7 +40,12 @@ export async function GET() {
     .slice(0, 5);
 
   return NextResponse.json({
-    user: { name: user.name, plan: user.plan },
+    user: {
+      name: user.name,
+      plan: user.plan,
+      currency: user.currency,
+      location: user.location,
+    },
     balance,
     totalIncome,
     totalExpenses,

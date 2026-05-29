@@ -13,7 +13,8 @@ model User {
   email             String        @unique
   avatarUrl         String?
   plan              String        @default("free") // free | pro
-  currency          String        @default("USD")
+  currency          String        @default("NGN")
+  location          String        @default("Abuja, Nigeria")
   pushNotifications Boolean       @default(true)
   gmailLinked       Boolean       @default(false)
   smsActive         Boolean       @default(false)

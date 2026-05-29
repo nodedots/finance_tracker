@@ -74,13 +74,13 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
           </form>
 
           <p className="mt-8 text-center text-sm text-zinc-400">
-            Don't have an account? <button className="text-black font-bold">Sign up</button>
+            Don&apos;t have an account? <button className="text-black font-bold">Sign up</button>
           </p>
         </div>
         
         <div className="bg-zinc-50 p-6 border-t border-zinc-100 text-center">
           <p className="text-xs text-zinc-400 leading-relaxed px-4">
-            By continuing, you agree to Fintrack's <span className="underline cursor-pointer">Terms of Service</span> and <span className="underline cursor-pointer">Privacy Policy</span>.
+            By continuing, you agree to Fintrack&apos;s <span className="underline cursor-pointer">Terms of Service</span> and <span className="underline cursor-pointer">Privacy Policy</span>.
           </p>
         </div>
       </div>

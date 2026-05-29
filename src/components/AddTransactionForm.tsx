@@ -96,7 +96,7 @@ export default function AddTransactionForm({ categories }: Props) {
       <div>
         <label className="block text-xs font-semibold text-zinc-500 uppercase tracking-widest mb-2">Amount</label>
         <div className="relative">
-          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 text-xl font-semibold">$</span>
+          <span className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-400 text-xl font-semibold">₦</span>
           <input
             type="number"
             step="0.01"
@@ -119,7 +119,7 @@ export default function AddTransactionForm({ categories }: Props) {
           value={merchant}
           onChange={e => setMerchant(e.target.value)}
           className="w-full bg-white border border-zinc-200 rounded-xl py-3 px-4 text-sm text-zinc-900 focus:ring-2 focus:ring-black focus:border-transparent"
-          placeholder="e.g., Starbucks, Monthly Salary"
+          placeholder="e.g., Sahad Stores, Monthly Salary"
         />
       </div>
 

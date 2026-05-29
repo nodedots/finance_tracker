@@ -9,6 +9,7 @@ interface User {
   email: string;
   plan: string;
   currency: string;
+  location: string;
   pushNotifications: boolean;
   gmailLinked: boolean;
   smsActive: boolean;
@@ -37,6 +38,7 @@ export default function SettingsContent({ initialUser }: Props) {
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(user.name);
   const [email, setEmail] = useState(user.email);
+  const [location, setLocation] = useState(user.location);
   const [saving, setSaving] = useState(false);
 
   async function updateField(field: string, value: boolean | string) {
@@ -57,6 +59,7 @@ export default function SettingsContent({ initialUser }: Props) {
     try {
       await updateField('name', name);
       await updateField('email', email);
+      await updateField('location', location);
       setEditing(false);
     } finally {
       setSaving(false);
@@ -85,11 +88,17 @@ export default function SettingsContent({ initialUser }: Props) {
                     onChange={e => setEmail(e.target.value)}
                     className="block bg-zinc-50 border border-zinc-200 rounded-lg py-2 px-3 text-sm text-zinc-600 w-full focus:ring-2 focus:ring-black"
                   />
+                  <input
+                    value={location}
+                    onChange={e => setLocation(e.target.value)}
+                    className="block bg-zinc-50 border border-zinc-200 rounded-lg py-2 px-3 text-sm text-zinc-600 w-full focus:ring-2 focus:ring-black"
+                  />
                 </div>
               ) : (
                 <>
                   <h2 className="font-['Manrope'] font-semibold text-xl text-zinc-900">{user.name}</h2>
                   <p className="text-sm text-zinc-500">{user.email}</p>
+                  <p className="text-xs text-zinc-400 mt-1">{user.location}</p>
                 </>
               )}
             </div>
@@ -183,11 +192,13 @@ export default function SettingsContent({ initialUser }: Props) {
               onChange={e => updateField('currency', e.target.value)}
               className="bg-zinc-50 border border-zinc-200 rounded-lg py-1.5 px-3 text-sm text-zinc-700 focus:ring-2 focus:ring-black"
             >
+              <option value="NGN">NGN</option>
+              <option value="GHS">GHS</option>
+              <option value="KES">KES</option>
+              <option value="ZAR">ZAR</option>
               <option value="USD">USD</option>
               <option value="EUR">EUR</option>
               <option value="GBP">GBP</option>
-              <option value="CAD">CAD</option>
-              <option value="AUD">AUD</option>
             </select>
           </div>
           <div className="flex items-center justify-between p-4">

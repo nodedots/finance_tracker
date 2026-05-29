@@ -50,8 +50,8 @@ export default function Sidebar() {
               <span className="material-symbols-outlined text-[20px]">person</span>
             </div>
             <div className="text-sm">
-              <p className="font-semibold text-zinc-900">Alex Thompson</p>
-              <p className="text-zinc-400 text-xs">Open Source</p>
+              <p className="font-semibold text-zinc-900">Amina Bello</p>
+              <p className="text-zinc-400 text-xs">Abuja, Nigeria</p>
             </div>
           </div>
         </div>

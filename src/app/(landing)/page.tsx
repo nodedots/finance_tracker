@@ -37,14 +37,14 @@ export default function LandingPage() {
           <div className="animate-fade-in-up">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-zinc-100 border border-zinc-200 mb-8">
               <span className="flex h-2 w-2 rounded-full bg-blue-600 animate-pulse"></span>
-              <span className="text-[11px] font-black font-['Manrope'] uppercase tracking-[0.2em] text-zinc-500">AI-Powered Finance v2.0</span>
+              <span className="text-[11px] font-black font-['Manrope'] uppercase tracking-[0.2em] text-zinc-500">Built for Abuja money flows</span>
             </div>
             <h1 className="text-6xl md:text-8xl font-black font-['Manrope'] tracking-tight leading-[0.9] mb-8">
               Finance on <br />
               <span className="text-zinc-300">Autopilot.</span>
             </h1>
             <p className="text-xl text-zinc-500 leading-relaxed mb-10 max-w-lg">
-              Fintrack automatically captures every transaction from your email, SMS, and receipts. No manual entry, just pure insights.
+              Fintrack automatically captures naira transactions from Nigerian bank alerts, email receipts, and SMS. No manual entry, just clear insights.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <button 
@@ -69,7 +69,7 @@ export default function LandingPage() {
                 <div className="p-6 space-y-6">
                   <div className="w-full h-40 bg-black rounded-3xl p-6 text-white">
                     <p className="text-[10px] opacity-50 font-bold uppercase tracking-widest mb-1">Balance</p>
-                    <p className="text-3xl font-black font-['Manrope']">$12,450.00</p>
+                    <p className="text-3xl font-black font-['Manrope']">₦1,245,000</p>
                   </div>
                   <div className="space-y-3">
                     <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-widest">Recent Activity</p>
@@ -103,8 +103,8 @@ export default function LandingPage() {
             <p className="text-sm font-bold font-['Manrope'] uppercase tracking-widest text-zinc-400">Accuracy Rate</p>
           </div>
           <div className="text-center">
-            <p className="text-4xl md:text-5xl font-black font-['Manrope'] mb-2">12k+</p>
-            <p className="text-sm font-bold font-['Manrope'] uppercase tracking-widest text-zinc-400">Active Users</p>
+            <p className="text-4xl md:text-5xl font-black font-['Manrope'] mb-2">Abuja</p>
+            <p className="text-sm font-bold font-['Manrope'] uppercase tracking-widest text-zinc-400">Local Context</p>
           </div>
           <div className="text-center">
             <p className="text-4xl md:text-5xl font-black font-['Manrope'] mb-2">24/7</p>

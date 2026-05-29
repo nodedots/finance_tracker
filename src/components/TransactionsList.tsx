@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useMemo } from 'react';
+import { formatCurrency, formatDate, formatTime } from '@/lib/format';
 
 interface Category {
   id: string;
@@ -28,19 +29,10 @@ const sourceIcons: Record<string, { icon: string; color: string }> = {
   manual: { icon: 'edit', color: 'text-zinc-500' },
 };
 
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
-}
-
-function formatTime(dateStr: string) {
-  const d = new Date(dateStr);
-  return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-}
-
 function groupByDate(txns: Transaction[]): Record<string, Transaction[]> {
   const groups: Record<string, Transaction[]> = {};
   for (const txn of txns) {
-    const key = new Date(txn.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const key = formatDate(txn.createdAt);
     if (!groups[key]) groups[key] = [];
     groups[key].push(txn);
   }
@@ -50,9 +42,10 @@ function groupByDate(txns: Transaction[]): Record<string, Transaction[]> {
 interface Props {
   initialTransactions: Transaction[];
   categories: Category[];
+  currency: string;
 }
 
-export default function TransactionsList({ initialTransactions, categories }: Props) {
+export default function TransactionsList({ initialTransactions, categories, currency }: Props) {
   const [search, setSearch] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
 
@@ -140,7 +133,7 @@ export default function TransactionsList({ initialTransactions, categories }: Pr
                   </div>
                   <div className="text-right">
                     <p className={`font-semibold text-sm ${txn.type === 'income' ? 'text-[#009844]' : 'text-zinc-900'}`}>
-                      {txn.type === 'income' ? '+' : '-'}{formatCurrency(txn.amount)}
+                      {txn.type === 'income' ? '+' : '-'}{formatCurrency(txn.amount, currency)}
                     </p>
                     <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-tight">{txn.status}</p>
                   </div>

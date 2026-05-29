@@ -1,9 +1,6 @@
 import { prisma } from '@/lib/prisma';
+import { formatCurrency } from '@/lib/format';
 import Link from 'next/link';
-
-function formatCurrency(amount: number) {
-  return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(amount);
-}
 
 function timeAgo(date: Date) {
   const now = new Date();
@@ -59,6 +56,7 @@ export default async function Dashboard() {
           <div>
             <p className="text-zinc-500 text-sm font-medium">Welcome back,</p>
             <h1 className="font-['Manrope'] font-black text-3xl md:text-4xl text-zinc-900 tracking-tight">{user.name}</h1>
+            <p className="text-zinc-400 text-xs font-semibold mt-1">{user.location}</p>
           </div>
           <div className="flex items-center gap-3">
             {user.smsActive && (
@@ -87,7 +85,7 @@ export default async function Dashboard() {
             <div className="absolute -right-10 -top-10 w-40 h-40 bg-white/10 rounded-full blur-3xl" />
             <p className="text-sm opacity-70 mb-1 font-semibold">Total Balance</p>
             <h2 className="text-4xl md:text-5xl font-semibold font-['Manrope'] tracking-tight mb-6">
-              {formatCurrency(balance)}
+              {formatCurrency(balance, user.currency)}
             </h2>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
               <div className="bg-white/10 rounded-2xl p-4 backdrop-blur-sm">
@@ -95,14 +93,14 @@ export default async function Dashboard() {
                   <span className="material-symbols-outlined text-sm">arrow_downward</span>
                   <span className="text-[12px] uppercase tracking-wider opacity-70 font-semibold">Income</span>
                 </div>
-                <p className="font-['Manrope'] font-semibold text-xl">{formatCurrency(totalIncome)}</p>
+                <p className="font-['Manrope'] font-semibold text-xl">{formatCurrency(totalIncome, user.currency)}</p>
               </div>
               <div className="bg-white/10 rounded-2xl p-4 backdrop-blur-sm">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="material-symbols-outlined text-sm">arrow_upward</span>
                   <span className="text-[12px] uppercase tracking-wider opacity-70 font-semibold">Expenses</span>
                 </div>
-                <p className="font-['Manrope'] font-semibold text-xl">{formatCurrency(totalExpenses)}</p>
+                <p className="font-['Manrope'] font-semibold text-xl">{formatCurrency(totalExpenses, user.currency)}</p>
               </div>
               <div className="hidden md:block bg-white/10 rounded-2xl p-4 backdrop-blur-sm">
                 <div className="flex items-center gap-2 mb-1">
@@ -135,14 +133,14 @@ export default async function Dashboard() {
               <p className="font-['Manrope'] font-black text-3xl text-white">{transactions.length}</p>
             </div>
           </div>
-          {topCategories.slice(0, 2).map((cat, i) => (
+          {topCategories.slice(0, 2).map((cat) => (
             <div key={cat.name} className="bg-white rounded-[32px] p-6 border border-zinc-100 flex flex-col justify-between aspect-square md:aspect-auto md:h-48 group hover:scale-[1.02] transition-transform duration-500 shadow-sm hover:shadow-xl hover:shadow-zinc-200/50">
               <div className="w-12 h-12 rounded-2xl flex items-center justify-center" style={{ backgroundColor: `${cat.color}15` }}>
                 <span className="material-symbols-outlined text-2xl" style={{ color: cat.color }}>{cat.icon}</span>
               </div>
               <div>
                 <p className="text-zinc-400 text-[11px] font-black uppercase tracking-[0.2em] mb-1">{cat.name}</p>
-                <p className="font-['Manrope'] font-black text-2xl text-zinc-900">{formatCurrency(cat.total)}</p>
+                <p className="font-['Manrope'] font-black text-2xl text-zinc-900">{formatCurrency(cat.total, user.currency)}</p>
               </div>
             </div>
           ))}
@@ -175,7 +173,7 @@ export default async function Dashboard() {
                   </div>
                   <div className="text-right">
                     <p className={`font-semibold text-sm ${txn.type === 'income' ? 'text-[#009844]' : 'text-zinc-900'}`}>
-                      {txn.type === 'income' ? '+' : '-'}{formatCurrency(txn.amount)}
+                      {txn.type === 'income' ? '+' : '-'}{formatCurrency(txn.amount, user.currency)}
                     </p>
                     <p className="text-[10px] text-zinc-400 font-bold uppercase tracking-tight">{txn.status}</p>
                   </div>
