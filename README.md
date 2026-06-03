@@ -1,4 +1,4 @@
-# Fintrack - AI-Powered Personal Finance
+# Fintrack - Personal Finance MAnagement App
 
 Fintrack is a high-fidelity personal finance application prototype built with the **Fintech Modernist** design system. It prioritizes a premium aesthetic, clean minimalism, and an intuitive user experience, featuring AI-driven transaction capturing.
 
