@@ -1,17 +1,18 @@
-require('dotenv').config();
-
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const Database = require('better-sqlite3');
 
+const ROOT = __dirname;
+const dotenvResult = require('dotenv').config({ path: path.join(ROOT, '.env') });
+const localEnv = dotenvResult.parsed || {};
+
 const PORT = Number(process.env.PORT || 3000);
 const HOST = process.env.HOST || '127.0.0.1';
-const ROOT = __dirname;
 const PUBLIC_DIR = path.join(ROOT, 'public');
 const DB_PATH = path.join(ROOT, 'dev.db');
-const MODEL = process.env.GEMINI_MODEL || 'gemini-2.5-flash';
+const MODEL = envValue('GEMINI_MODEL') || 'gemini-2.5-flash';
 
 const db = new Database(DB_PATH);
 db.pragma('foreign_keys = ON');
@@ -295,25 +296,16 @@ async function handleApi(req, res, requestUrl) {
     const file = await readMultipartFile(req);
     if (!file) return sendJson(res, 400, { error: 'Receipt image is required' });
 
-    const fallback = inferFromFileName(file.filename || 'receipt');
-    if (!process.env.GEMINI_API_KEY) {
-      return sendJson(res, 200, {
-        ...fallback,
-        provider: 'local',
-        note: `${fallback.note}. Add GEMINI_API_KEY to enable image reading.`,
-      });
+    if (!geminiApiKey()) {
+      return sendJson(res, 503, { error: 'Gemini receipt reading is not configured. Add GEMINI_API_KEY and restart the server.' });
     }
 
     try {
       const extracted = await extractWithGemini(file);
-      return sendJson(res, 200, { ...fallback, ...extracted, provider: 'gemini' });
+      return sendJson(res, 200, { ...extracted, provider: 'gemini' });
     } catch (error) {
       console.error('Receipt extraction failed:', error);
-      return sendJson(res, 200, {
-        ...fallback,
-        provider: 'local',
-        note: `${fallback.note}. Gemini extraction failed, so local fallback was used.`,
-      });
+      return sendJson(res, 502, { error: 'Gemini could not read this receipt. Try a clearer image or enter the details manually.' });
     }
   }
 
@@ -518,11 +510,11 @@ async function readMultipartFile(req) {
 }
 
 async function extractWithGemini(file) {
-  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent`, {
+  const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(MODEL)}:generateContent`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-goog-api-key': process.env.GEMINI_API_KEY || '',
+      'x-goog-api-key': geminiApiKey(),
     },
     body: JSON.stringify({
       contents: [
@@ -562,6 +554,14 @@ async function extractWithGemini(file) {
   return normalizeReceipt(JSON.parse(text));
 }
 
+function envValue(name) {
+  return String(process.env[name] || localEnv[name] || '').trim();
+}
+
+function geminiApiKey() {
+  return envValue('GEMINI_API_KEY') || envValue('GOOGLE_API_KEY');
+}
+
 function normalizeReceipt(value) {
   const merchant = typeof value.merchant === 'string' && value.merchant.trim()
     ? value.merchant.trim()
@@ -580,29 +580,6 @@ function normalizeReceipt(value) {
     : 0.75;
 
   return { merchant, amount, categoryName, note, confidence };
-}
-
-function inferFromFileName(fileName) {
-  const normalized = fileName.replace(/\.[^/.]+$/, '').replace(/[-_]+/g, ' ').trim();
-  const merchant = normalized.length > 2 ? titleCase(normalized) : 'Receipt Purchase';
-  const lower = merchant.toLowerCase();
-  const categoryName = lower.includes('fuel') || lower.includes('bolt')
-    ? 'Transport'
-    : lower.includes('market') || lower.includes('sahad')
-      ? 'Markets'
-      : lower.includes('cafe') || lower.includes('food') || lower.includes('kilishi')
-        ? 'Food'
-        : lower.includes('pharmacy') || lower.includes('clinic')
-          ? 'Health'
-          : 'Shopping';
-
-  return {
-    merchant,
-    amount: lower.includes('fuel') ? 45000 : 18650,
-    categoryName,
-    note: 'Locally inferred receipt draft',
-    confidence: 0.35,
-  };
 }
 
 function sendJson(res, status, payload) {
@@ -627,6 +604,3 @@ function inferNameFromEmail(email) {
     .join(' ');
 }
 
-function titleCase(value) {
-  return value.replace(/\w\S*/g, (word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase());
-}

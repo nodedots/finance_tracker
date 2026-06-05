@@ -7,7 +7,7 @@ Fintrack is a personal finance tracker prototype for capturing, reviewing, and m
 - **Server**: Node.js HTTP server
 - **Frontend**: HTML, CSS, and vanilla JavaScript
 - **Database**: SQLite through `better-sqlite3`
-- **Receipt extraction**: Gemini when `GEMINI_API_KEY` is configured, with a local fallback draft
+- **Receipt extraction**: Gemini image reading when `GEMINI_API_KEY` is configured
 
 ## Features
 

@@ -23,10 +23,10 @@ const state = {
   scanMode: 'receipt',
   receiptImage: '',
   receiptDraft: {
-    merchant: 'Sahad Stores',
-    amount: '18650',
+    merchant: '',
+    amount: '',
     categoryId: '',
-    note: 'Receipt captured',
+    note: '',
     reader: null,
     confidence: null,
     status: 'idle',
@@ -611,7 +611,6 @@ function receiptStatusText() {
   const draft = state.receiptDraft;
   if (draft.status === 'scanning') return 'Reading receipt fields...';
   if (draft.reader === 'gemini') return `Read by Gemini${draft.confidence !== null ? ` - ${Math.round(draft.confidence * 100)}% confidence` : ''}`;
-  if (draft.reader === 'local') return 'Local fallback draft';
   return 'Upload a clear receipt to extract fields.';
 }
 
@@ -1067,9 +1066,17 @@ async function handleReceiptFile(file) {
       status: 'ready',
       error: '',
     };
-  } catch {
-    state.receiptDraft.status = 'ready';
-    state.receiptDraft.error = 'Could not read this receipt. Enter the details manually or try a clearer image.';
+  } catch (error) {
+    state.receiptDraft = {
+      merchant: '',
+      amount: '',
+      categoryId: firstExpenseCategory()?.id || state.categories[0]?.id || '',
+      note: '',
+      reader: null,
+      confidence: null,
+      status: 'ready',
+      error: error.message || 'Could not read this receipt. Enter the details manually or try a clearer image.',
+    };
   }
 
   render();
