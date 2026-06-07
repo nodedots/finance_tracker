@@ -62,6 +62,8 @@ Create a `.env` file:
 # Optional: enables Gemini receipt extraction
 GEMINI_API_KEY="your-api-key"
 GEMINI_MODEL="gemini-2.5-flash"
+DATABASE_URL=file:./dev.db
+
 ```
 
 The app stores data in `dev.db`. The server creates required SQLite tables/columns automatically if they are missing.
