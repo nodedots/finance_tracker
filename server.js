@@ -3,16 +3,36 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const Database = require('better-sqlite3');
+const dotenv = require('dotenv');
 
 const ROOT = __dirname;
-const dotenvResult = require('dotenv').config({ path: path.join(ROOT, '.env') });
-const localEnv = dotenvResult.parsed || {};
+const localEnv = loadLocalEnv();
+for (const [name, value] of Object.entries(localEnv)) {
+  if (process.env[name] === undefined) process.env[name] = value;
+}
 
 const PORT = Number(process.env.PORT || 3000);
 const HOST = process.env.HOST || '127.0.0.1';
 const PUBLIC_DIR = path.join(ROOT, 'public');
 const DB_PATH = path.join(ROOT, 'dev.db');
 const MODEL = envValue('GEMINI_MODEL') || 'gemini-2.5-flash';
+const EXCHANGE_RATE_API_URL = envValue('EXCHANGE_RATE_API_URL') || 'https://open.er-api.com/v6/latest/{base}';
+const EXCHANGE_RATE_CACHE_MS = 60 * 60 * 1000;
+const exchangeRateCache = new Map();
+const RECEIPT_MIME_TYPES = new Set([
+  'application/msword',
+  'application/pdf',
+  'application/rtf',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'image/gif',
+  'image/heic',
+  'image/heif',
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'text/plain',
+  'text/rtf',
+]);
 
 const db = new Database(DB_PATH);
 db.pragma('foreign_keys = ON');
@@ -293,8 +313,14 @@ async function handleApi(req, res, requestUrl) {
   }
 
   if (pathname === '/api/receipt/extract' && method === 'POST') {
+    const user = getCurrentUser();
+    if (!user) return sendJson(res, 404, { error: 'No user found' });
+
     const file = await readMultipartFile(req);
-    if (!file) return sendJson(res, 400, { error: 'Receipt image is required' });
+    if (!file) return sendJson(res, 400, { error: 'Receipt file is required' });
+    if (!isSupportedReceiptFile(file)) {
+      return sendJson(res, 415, { error: 'Unsupported receipt file type. Upload an image, PDF, Word document, or text file.' });
+    }
 
     if (!geminiApiKey()) {
       return sendJson(res, 503, { error: 'Gemini receipt reading is not configured. Add GEMINI_API_KEY and restart the server.' });
@@ -302,10 +328,11 @@ async function handleApi(req, res, requestUrl) {
 
     try {
       const extracted = await extractWithGemini(file);
-      return sendJson(res, 200, { ...extracted, provider: 'gemini' });
+      const converted = await convertReceiptCurrency(extracted, user.currency);
+      return sendJson(res, 200, { ...converted, provider: 'gemini' });
     } catch (error) {
       console.error('Receipt extraction failed:', error);
-      return sendJson(res, 502, { error: 'Gemini could not read this receipt. Try a clearer image or enter the details manually.' });
+      return sendJson(res, 502, { error: error.publicMessage || 'Gemini could not read this receipt file. Try a clearer file or enter the details manually.' });
     }
   }
 
@@ -459,6 +486,8 @@ function serveStatic(res, pathname) {
     '.html': 'text/html; charset=utf-8',
     '.css': 'text/css; charset=utf-8',
     '.js': 'application/javascript; charset=utf-8',
+    '.webmanifest': 'application/manifest+json; charset=utf-8',
+    '.json': 'application/json; charset=utf-8',
     '.svg': 'image/svg+xml',
     '.png': 'image/png',
     '.jpg': 'image/jpeg',
@@ -497,7 +526,7 @@ async function readMultipartFile(req) {
 
   const headers = buffer.slice(buffer.indexOf(firstBoundary), headerEnd).toString('utf8');
   const filename = headers.match(/filename="([^"]*)"/)?.[1] || 'receipt';
-  const mimeType = headers.match(/Content-Type:\s*([^\r\n]+)/i)?.[1] || 'image/jpeg';
+  const mimeType = headers.match(/Content-Type:\s*([^\r\n]+)/i)?.[1]?.split(';')[0].trim().toLowerCase() || 'image/jpeg';
   const dataStart = headerEnd + 4;
   const dataEnd = buffer.indexOf(Buffer.from(`\r\n--${boundary}`), dataStart);
   if (dataEnd === -1) return null;
@@ -507,6 +536,10 @@ async function readMultipartFile(req) {
     mimeType,
     buffer: buffer.slice(dataStart, dataEnd),
   };
+}
+
+function isSupportedReceiptFile(file) {
+  return file.mimeType.startsWith('image/') || RECEIPT_MIME_TYPES.has(file.mimeType);
 }
 
 async function extractWithGemini(file) {
@@ -528,11 +561,12 @@ async function extractWithGemini(file) {
             },
             {
               text: [
-                'Read this receipt or payment screenshot and return only valid JSON.',
-                'Extract merchant, total amount as a number, best categoryName, and a short note.',
-                'Allowed categoryName values: Shopping, Food, Transport, Utility, Subscription, Entertainment, Health, Markets, Rent.',
+                'Read this receipt, invoice, payment screenshot, PDF, or document and return only valid JSON.',
+                'Extract merchant, total amount as a number, original receipt currency as an ISO 4217 code, best categoryName, and a short note.',
+                'Allowed categoryName values: Shopping, Food, Transport, Utility, Subscription, Entertainment, Health, Markets, Rent, Income.',
+                'Use the currency printed on the receipt, payment page, or invoice. If currency is unclear, use null.',
                 'If the receipt is unclear, use the most likely value and lower confidence.',
-                'JSON shape: {"merchant":"string","amount":12345,"categoryName":"Food","note":"string","confidence":0.0}',
+                'JSON shape: {"merchant":"string","amount":12345,"currency":"NGN","categoryName":"Food","note":"string","confidence":0.0}',
               ].join('\n'),
             },
           ],
@@ -558,6 +592,14 @@ function envValue(name) {
   return String(process.env[name] || localEnv[name] || '').trim();
 }
 
+function loadLocalEnv() {
+  return ['.env', '.env.local'].reduce((values, filename) => {
+    const envPath = path.join(ROOT, filename);
+    if (!fs.existsSync(envPath)) return values;
+    return { ...values, ...dotenv.parse(fs.readFileSync(envPath)) };
+  }, {});
+}
+
 function geminiApiKey() {
   return envValue('GEMINI_API_KEY') || envValue('GOOGLE_API_KEY');
 }
@@ -569,6 +611,7 @@ function normalizeReceipt(value) {
   const amount = typeof value.amount === 'number'
     ? value.amount
     : Number(String(value.amount || '').replace(/[^\d.]/g, '')) || 0;
+  const currency = normalizeCurrency(value.currency);
   const categoryName = typeof value.categoryName === 'string' && value.categoryName.trim()
     ? value.categoryName.trim()
     : 'Shopping';
@@ -579,7 +622,114 @@ function normalizeReceipt(value) {
     ? Math.max(0, Math.min(1, value.confidence))
     : 0.75;
 
-  return { merchant, amount, categoryName, note, confidence };
+  return { merchant, amount, currency, categoryName, note, confidence };
+}
+
+async function convertReceiptCurrency(receipt, targetCurrency) {
+  const destination = normalizeCurrency(targetCurrency) || 'NGN';
+  const source = receipt.currency || destination;
+
+  if (source === destination) {
+    return {
+      ...receipt,
+      amount: roundCurrencyAmount(receipt.amount, destination),
+      currency: destination,
+      originalAmount: roundCurrencyAmount(receipt.amount, source),
+      originalCurrency: source,
+      exchangeRate: 1,
+      converted: false,
+    };
+  }
+
+  const exchangeRate = await fetchExchangeRate(source, destination);
+  const convertedAmount = roundCurrencyAmount(receipt.amount * exchangeRate, destination);
+  const originalAmount = roundCurrencyAmount(receipt.amount, source);
+  const conversionNote = `Original: ${formatAmountForNote(originalAmount, source)} converted at 1 ${source} = ${formatRateForNote(exchangeRate)} ${destination}.`;
+
+  return {
+    ...receipt,
+    amount: convertedAmount,
+    currency: destination,
+    originalAmount,
+    originalCurrency: source,
+    exchangeRate,
+    converted: true,
+    note: receipt.note ? `${receipt.note} ${conversionNote}` : conversionNote,
+  };
+}
+
+async function fetchExchangeRate(sourceCurrency, targetCurrency) {
+  const source = normalizeCurrency(sourceCurrency);
+  const target = normalizeCurrency(targetCurrency);
+  if (!source || !target) throw publicError(`Could not identify receipt currency for conversion to ${targetCurrency}.`);
+  if (source === target) return 1;
+
+  const cacheKey = `${source}:${target}`;
+  const cached = exchangeRateCache.get(cacheKey);
+  if (cached && Date.now() - cached.fetchedAt < EXCHANGE_RATE_CACHE_MS) return cached.rate;
+
+  const url = EXCHANGE_RATE_API_URL
+    .replace('{base}', encodeURIComponent(source))
+    .replace('{source}', encodeURIComponent(source))
+    .replace('{target}', encodeURIComponent(target));
+
+  let payload;
+  try {
+    const response = await fetch(url, { headers: { Accept: 'application/json' } });
+    if (!response.ok) throw new Error(`Exchange API failed with ${response.status}`);
+    payload = await response.json();
+  } catch (error) {
+    throw publicError(`Could not convert ${source} to ${target}. Check exchange-rate configuration or enter the converted amount manually.`, error);
+  }
+
+  const rate = readExchangeRate(payload, target);
+  if (!Number.isFinite(rate) || rate <= 0) {
+    throw publicError(`Could not find an exchange rate for ${source} to ${target}. Enter the converted amount manually.`);
+  }
+
+  exchangeRateCache.set(cacheKey, { rate, fetchedAt: Date.now() });
+  return rate;
+}
+
+function readExchangeRate(payload, targetCurrency) {
+  if (typeof payload?.conversion_rate === 'number') return payload.conversion_rate;
+  if (typeof payload?.result === 'number') return payload.result;
+  if (typeof payload?.rates?.[targetCurrency] === 'number') return payload.rates[targetCurrency];
+  if (typeof payload?.conversion_rates?.[targetCurrency] === 'number') return payload.conversion_rates[targetCurrency];
+  return 0;
+}
+
+function normalizeCurrency(value) {
+  if (typeof value !== 'string') return '';
+  const currency = value.trim().toUpperCase();
+  return /^[A-Z]{3}$/.test(currency) ? currency : '';
+}
+
+function roundCurrencyAmount(amount, currency) {
+  const decimals = currency === 'NGN' ? 0 : 2;
+  const factor = 10 ** decimals;
+  return Math.round(Number(amount || 0) * factor) / factor;
+}
+
+function formatAmountForNote(amount, currency) {
+  return `${currency} ${Number(amount || 0).toLocaleString('en-US', {
+    minimumFractionDigits: currency === 'NGN' ? 0 : 2,
+    maximumFractionDigits: currency === 'NGN' ? 0 : 2,
+  })}`;
+}
+
+function formatRateForNote(rate) {
+  return Number(rate || 0).toLocaleString('en-US', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 6,
+  });
+}
+
+function publicError(message, cause) {
+  const error = new Error(message);
+  error.publicMessage = message;
+  if (cause) error.cause = cause;
+  return error;
 }
 
 function sendJson(res, status, payload) {
@@ -603,4 +753,3 @@ function inferNameFromEmail(email) {
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
 }
-

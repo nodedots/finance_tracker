@@ -1,20 +1,20 @@
 # Fintrack
 
-Fintrack is a personal finance tracker prototype for capturing, reviewing, and managing transactions from manual entries, SMS/email-style records, and receipt images. It uses a local-first SQLite database and a polished dashboard built with plain HTML, CSS, browser JavaScript, and Node.js.
+Fintrack is a personal finance tracker prototype for capturing, reviewing, and managing transactions from manual entries, SMS/email-style records, and receipt files. It uses a local-first SQLite database and a polished dashboard built with plain HTML, CSS, browser JavaScript, and Node.js.
 
 ## Tech Stack
 
 - **Server**: Node.js HTTP server
 - **Frontend**: HTML, CSS, and vanilla JavaScript
 - **Database**: SQLite through `better-sqlite3`
-- **Receipt extraction**: Gemini image reading when `GEMINI_API_KEY` is configured
+- **Receipt extraction**: Gemini receipt file reading when `GEMINI_API_KEY` is configured
 
 ## Features
 
 - Landing page with onboarding entry points
 - Local onboarding for profile, location, and capture preferences
 - Dashboard with balance, income, expense, savings rate, top spending, and recent activity
-- Receipt capture at `/scan` using image upload or supported mobile camera capture
+- Receipt capture at `/scan` using image, PDF, Word document, or text-file upload
 - Manual transaction entry
 - Transaction management at `/transactions`
   - Search by merchant, category, or note
@@ -56,12 +56,16 @@ npm install
 
 ### Environment
 
-Create a `.env` file:
+Create a `.env.local` file:
 
 ```bash
 # Optional: enables Gemini receipt extraction
 GEMINI_API_KEY="your-api-key"
 GEMINI_MODEL="gemini-2.5-flash"
+
+# Optional: exchange rates for converting receipt currencies into the user's default currency
+EXCHANGE_RATE_API_URL="https://open.er-api.com/v6/latest/{base}"
+
 DATABASE_URL=file:./dev.db
 
 ```
@@ -94,6 +98,6 @@ npm run lint     # Syntax-check server and browser JavaScript
 
 ## Notes
 
-- Camera capture is implemented with a file input using `capture="environment"`. Mobile browsers can open the rear camera; desktop browsers usually show a file picker.
+- Receipt capture is implemented with a file input that accepts images, PDFs, Word documents, and text files. Mobile browsers may still offer camera capture for image selection.
 - The app currently uses the first local user record as the active user. Full authentication is not implemented yet.
-- Do not commit real API keys or production secrets in `.env`.
+- Do not commit real API keys or production secrets in `.env` or `.env.local`.

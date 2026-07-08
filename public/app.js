@@ -14,6 +14,20 @@ const sourceIcons = {
   manual: { icon: 'edit', color: '#71717a' },
 };
 
+const receiptFileAccept = [
+  'image/*',
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/rtf',
+  'text/plain',
+  '.pdf',
+  '.doc',
+  '.docx',
+  '.rtf',
+  '.txt',
+].join(',');
+
 const state = {
   user: null,
   categories: [],
@@ -21,7 +35,7 @@ const state = {
   dashboard: null,
   onboardingStep: 0,
   scanMode: 'receipt',
-  receiptImage: '',
+  receiptFile: null,
   receiptDraft: {
     merchant: '',
     amount: '',
@@ -29,6 +43,10 @@ const state = {
     note: '',
     reader: null,
     confidence: null,
+    converted: false,
+    originalAmount: null,
+    originalCurrency: null,
+    currency: 'NGN',
     status: 'idle',
     error: '',
   },
@@ -189,8 +207,8 @@ function renderLanding() {
 
         <section class="feature-section" id="security">
           <div class="feature-grid">
-            ${renderFeature('/onboarding', 'hub', 'Onboarding', 'Set profile, email, SMS, and camera capture preferences.')}
-            ${renderFeature('/scan', 'photo_camera', 'Capture', 'Snap or upload receipts and turn them into records.')}
+            ${renderFeature('/onboarding', 'hub', 'Onboarding', 'Set profile, email, SMS, and file capture preferences.')}
+            ${renderFeature('/scan', 'photo_camera', 'Capture', 'Upload receipts, PDFs, or documents and turn them into records.')}
             ${renderFeature('/dashboard', 'grid_view', 'Dashboard', 'Review your financial snapshot and recent activity.')}
           </div>
         </section>
@@ -230,7 +248,7 @@ function renderFeature(href, icon, title, detail) {
 function renderAuthModal() {
   return `
     <div class="modal-backdrop" data-action="close-auth">
-      <form class="modal form-stack" data-form="auth" onclick="event.stopPropagation()">
+      <form class="modal form-stack" data-form="auth">
         <div class="modal-head">
           <div>
             <p class="eyebrow">Local account</p>
@@ -537,9 +555,15 @@ function renderScan() {
       </div>
     </header>
     <div class="app-content">
-      <div class="segmented" style="margin-bottom:22px">
-        <button class="${state.scanMode === 'receipt' ? 'active' : ''}" data-action="scan-mode" data-mode="receipt">Receipt Capture</button>
-        <button class="${state.scanMode === 'manual' ? 'active' : ''}" data-action="scan-mode" data-mode="manual">Manual Entry</button>
+      <div class="scan-toolbar">
+        <div class="segmented">
+          <button class="${state.scanMode === 'receipt' ? 'active' : ''}" data-action="scan-mode" data-mode="receipt">Receipt Capture</button>
+          <button class="${state.scanMode === 'manual' ? 'active' : ''}" data-action="scan-mode" data-mode="manual">Manual Entry</button>
+        </div>
+        <button class="btn secondary reset-capture" type="button" data-action="reset-scan">
+          <span class="material-symbols-outlined">restart_alt</span>
+          Reset
+        </button>
       </div>
       ${state.scanMode === 'manual' ? renderAddTransactionForm() : renderReceiptForm()}
     </div>
@@ -562,7 +586,10 @@ function renderAddTransactionForm() {
       <div class="field"><span>Source</span><div class="source-options">${['manual', 'sms', 'email', 'receipt'].map((source) => `<button class="chip ${source === 'manual' ? 'active' : ''}" type="button" data-action="manual-source" data-source="${source}">${source}</button>`).join('')}</div></div>
       <input type="hidden" name="source" value="manual">
       <label class="field"><span>Note (optional)</span><textarea name="note" rows="3" placeholder="Add a note..."></textarea></label>
-      <button class="btn full large" type="submit"><span class="material-symbols-outlined">add_circle</span>Add Transaction</button>
+      <div class="button-row">
+        <button class="btn secondary full large" type="button" data-action="reset-scan"><span class="material-symbols-outlined">restart_alt</span>Reset</button>
+        <button class="btn full large" type="submit"><span class="material-symbols-outlined">add_circle</span>Add Transaction</button>
+      </div>
     </form>
   `;
 }
@@ -581,12 +608,13 @@ function renderReceiptForm() {
   return `
     <form class="form-stack" data-form="receipt">
       <div class="card" style="padding:16px">
-        <input id="receipt-file" type="file" accept="image/*" capture="environment" hidden data-input="receipt-file">
-        <button class="receipt-drop" type="button" data-action="choose-receipt">
-          ${state.receiptImage
-            ? `<img src="${state.receiptImage}" alt="Receipt preview">`
-            : `<span><span class="material-symbols-outlined">photo_camera</span><strong>Snap or upload receipt</strong><br><small style="color:var(--muted)">Use this for market, fuel, restaurant, pharmacy, or utility receipts.</small></span>`}
-        </button>
+        <input id="receipt-file" type="file" accept="${receiptFileAccept}" hidden data-input="receipt-file">
+        <div class="receipt-upload-shell">
+          <button class="receipt-drop" type="button" data-action="choose-receipt" ${draft.status === 'scanning' ? 'disabled' : ''}>
+            ${renderReceiptFilePreview()}
+          </button>
+          ${draft.status === 'scanning' ? renderReceiptScanningOverlay() : ''}
+        </div>
         <div class="scan-status">
           <span>${receiptStatusText()}</span>
           <strong>${draft.status === 'scanning' ? 'Scanning' : draft.status === 'ready' ? 'Ready' : 'Draft'}</strong>
@@ -597,19 +625,74 @@ function renderReceiptForm() {
         <label class="field"><span>Merchant</span><input name="merchant" value="${escapeAttr(draft.merchant)}" required></label>
         <label class="field"><span>Amount</span><span class="amount-field"><strong>${currencySymbol(state.user.currency)}</strong><input name="amount" type="number" value="${escapeAttr(draft.amount)}" required></span></label>
       </div>
-      <label class="field"><span>Category</span><select name="categoryId">${state.categories.filter((category) => category.name !== 'Income').map((category) => `<option value="${category.id}" ${category.id === draft.categoryId ? 'selected' : ''}>${escapeHtml(category.name)}</option>`).join('')}</select></label>
+      <label class="field"><span>Category</span><select name="categoryId">${state.categories.map((category) => `<option value="${category.id}" ${category.id === draft.categoryId ? 'selected' : ''}>${escapeHtml(category.name)}</option>`).join('')}</select></label>
       <label class="field"><span>Note</span><textarea name="note" rows="3">${escapeHtml(draft.note)}</textarea></label>
-      <button class="btn full large" type="submit" ${draft.status === 'saving' ? 'disabled' : ''}>
-        <span class="material-symbols-outlined ${draft.status === 'saving' ? 'spinner' : ''}">${draft.status === 'saving' ? 'progress_activity' : 'receipt_long'}</span>
-        ${draft.status === 'saving' ? 'Recording...' : 'Record Receipt'}
-      </button>
+      <div class="button-row">
+        <button class="btn secondary full large" type="button" data-action="reset-scan" ${draft.status === 'saving' ? 'disabled' : ''}>
+          <span class="material-symbols-outlined">restart_alt</span>
+          Reset
+        </button>
+        <button class="btn full large" type="submit" ${draft.status === 'saving' ? 'disabled' : ''}>
+          <span class="material-symbols-outlined ${draft.status === 'saving' ? 'spinner' : ''}">${draft.status === 'saving' ? 'progress_activity' : 'receipt_long'}</span>
+          ${draft.status === 'saving' ? 'Recording...' : 'Record Receipt'}
+        </button>
+      </div>
     </form>
   `;
+}
+
+function renderReceiptScanningOverlay() {
+  return `
+    <div class="receipt-scan-overlay" role="status" aria-live="polite">
+      <span class="scan-loader" aria-hidden="true"></span>
+      <strong>Scanning receipt...</strong>
+      <small>Reading fields and checking currency. This can take a moment.</small>
+    </div>
+  `;
+}
+
+function renderReceiptFilePreview() {
+  if (!state.receiptFile) {
+    return `
+      <span class="upload-placeholder">
+        <span class="material-symbols-outlined">upload_file</span>
+        <strong>Upload receipt or document</strong>
+        <small>Images, PDFs, Word docs, and text files are supported.</small>
+      </span>
+    `;
+  }
+
+  if (state.receiptFile.previewUrl) {
+    return `<img src="${state.receiptFile.previewUrl}" alt="Receipt preview">`;
+  }
+
+  return `
+    <span class="file-preview">
+      <span class="material-symbols-outlined">${iconForReceiptFile(state.receiptFile.type)}</span>
+      <strong>${escapeHtml(state.receiptFile.name)}</strong>
+      <small>${escapeHtml(labelForReceiptFile(state.receiptFile.type))}</small>
+    </span>
+  `;
+}
+
+function iconForReceiptFile(type) {
+  if (type === 'application/pdf') return 'picture_as_pdf';
+  if (type.includes('wordprocessingml') || type === 'application/msword') return 'description';
+  return 'draft';
+}
+
+function labelForReceiptFile(type) {
+  if (type === 'application/pdf') return 'PDF document';
+  if (type.includes('wordprocessingml') || type === 'application/msword') return 'Word document';
+  if (type === 'application/rtf' || type === 'text/rtf') return 'RTF document';
+  if (type === 'text/plain') return 'Text document';
+  return 'Document';
 }
 
 function receiptStatusText() {
   const draft = state.receiptDraft;
   if (draft.status === 'scanning') return 'Reading receipt fields...';
+  if (draft.converted && draft.originalCurrency && draft.currency) return `Converted ${draft.originalCurrency} to ${draft.currency}`;
   if (draft.reader === 'gemini') return `Read by Gemini${draft.confidence !== null ? ` - ${Math.round(draft.confidence * 100)}% confidence` : ''}`;
   return 'Upload a clear receipt to extract fields.';
 }
@@ -654,7 +737,7 @@ function renderSettings() {
         <div class="settings-list">
           ${renderSettingsToggle('mail', 'Gmail', 'Scanning receipts automatically', 'gmailLinked', user.gmailLinked, '#fee2e2', '#dc2626')}
           ${renderSettingsToggle('sms', 'SMS Notifications', 'Bank alert parsing', 'smsActive', user.smsActive, '#dbeafe', '#2563eb')}
-          ${renderSettingsToggle('camera_alt', 'Camera Permissions', 'Manual receipt capture', 'cameraEnabled', user.cameraEnabled, '#f4f4f5', '#18181b')}
+          ${renderSettingsToggle('upload_file', 'Receipt File Capture', 'Manual receipt and document capture', 'cameraEnabled', user.cameraEnabled, '#f4f4f5', '#18181b')}
         </div>
       </section>
 
@@ -746,7 +829,7 @@ function renderOnboardingConnections(user) {
       <div><p class="eyebrow">Connections</p><h2 style="margin:0">Choose capture channels</h2></div>
       ${renderConnectionCard('mail', 'Email receipts', 'Enable receipt intake for forwarded emails or a future OAuth inbox connection.', 'gmailLinked', Boolean(user.gmailLinked))}
       ${renderConnectionCard('sms', 'Bank SMS alerts', 'Enable alert capture for pasted, forwarded, or mobile-permission SMS records.', 'smsActive', Boolean(user.smsActive))}
-      ${renderConnectionCard('photo_camera', 'Receipt camera', 'Enable receipt capture with image extraction and editable review before saving.', 'cameraEnabled', Boolean(user.cameraEnabled))}
+      ${renderConnectionCard('upload_file', 'Receipt files', 'Enable receipt capture with file extraction and editable review before saving.', 'cameraEnabled', Boolean(user.cameraEnabled))}
       <div class="button-row">
         <button class="btn secondary full" data-action="onboarding-step" data-step="0">Back</button>
         <button class="btn full" data-action="onboarding-step" data-step="2">Continue</button>
@@ -776,7 +859,7 @@ function renderOnboardingReady(user) {
       <div class="status-grid">
         ${renderStatusCard('Email', Boolean(user.gmailLinked))}
         ${renderStatusCard('SMS', Boolean(user.smsActive))}
-        ${renderStatusCard('Camera', Boolean(user.cameraEnabled))}
+        ${renderStatusCard('File capture', Boolean(user.cameraEnabled))}
       </div>
       <div class="button-row">
         <button class="btn secondary full" data-action="onboarding-step" data-step="1">Back</button>
@@ -830,6 +913,7 @@ async function handleDocumentClick(event) {
   }
 
   if (action === 'close-auth') {
+    if (actionEl.classList.contains('modal-backdrop') && event.target !== actionEl) return;
     state.authModalOpen = false;
     state.message = '';
     render();
@@ -838,6 +922,11 @@ async function handleDocumentClick(event) {
   if (action === 'scan-mode') {
     state.scanMode = actionEl.dataset.mode;
     render();
+  }
+
+  if (action === 'reset-scan') {
+    resetScanEntry();
+    return;
   }
 
   if (action === 'choose-receipt') {
@@ -962,19 +1051,21 @@ async function handleSubmit(event) {
   if (formName === 'receipt') {
     state.receiptDraft.status = 'saving';
     render();
+    const receiptCategory = state.categories.find((category) => category.id === data.categoryId);
     await api('/api/transactions', {
       method: 'POST',
       body: {
         merchant: data.merchant,
         amount: Number(data.amount),
-        type: 'expense',
+        type: receiptCategory?.name === 'Income' ? 'income' : 'expense',
         categoryId: data.categoryId,
         source: 'receipt',
         status: 'verified',
         note: data.note || null,
       },
     });
-    state.receiptDraft.status = 'ready';
+    resetReceiptCapture();
+    state.message = 'Receipt recorded successfully.';
     await refreshTransactions();
     navigate('/transactions');
   }
@@ -1041,8 +1132,12 @@ function handleInput(event) {
 }
 
 async function handleReceiptFile(file) {
-  if (state.receiptImage) URL.revokeObjectURL(state.receiptImage);
-  state.receiptImage = URL.createObjectURL(file);
+  if (state.receiptFile?.previewUrl) URL.revokeObjectURL(state.receiptFile.previewUrl);
+  state.receiptFile = {
+    name: file.name,
+    type: file.type || 'application/octet-stream',
+    previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : '',
+  };
   state.receiptDraft.status = 'scanning';
   state.receiptDraft.error = '';
   render();
@@ -1063,6 +1158,10 @@ async function handleReceiptFile(file) {
       note: extracted.note,
       reader: extracted.provider,
       confidence: extracted.confidence,
+      converted: Boolean(extracted.converted),
+      originalAmount: extracted.originalAmount,
+      originalCurrency: extracted.originalCurrency,
+      currency: extracted.currency,
       status: 'ready',
       error: '',
     };
@@ -1074,12 +1173,75 @@ async function handleReceiptFile(file) {
       note: '',
       reader: null,
       confidence: null,
+      converted: false,
+      originalAmount: null,
+      originalCurrency: null,
+      currency: state.user?.currency || 'NGN',
       status: 'ready',
-      error: error.message || 'Could not read this receipt. Enter the details manually or try a clearer image.',
+      error: error.message || 'Could not read this receipt file. Enter the details manually or try a clearer upload.',
     };
   }
 
   render();
+}
+
+function resetReceiptCapture() {
+  if (state.receiptFile?.previewUrl) URL.revokeObjectURL(state.receiptFile.previewUrl);
+  state.receiptFile = null;
+  state.receiptDraft = createEmptyReceiptDraft();
+}
+
+function resetScanEntry() {
+  state.message = '';
+  if (state.scanMode === 'receipt') {
+    resetReceiptCapture();
+    render();
+    return;
+  }
+
+  state.receiptDraft = createEmptyReceiptDraft();
+  render();
+  resetManualEntryForm(document.querySelector('form[data-form="add-transaction"]'));
+}
+
+function resetManualEntryForm(form) {
+  if (!form) return;
+  form.reset();
+
+  const typeInput = form.querySelector('input[name="type"]');
+  const sourceInput = form.querySelector('input[name="source"]');
+  const categoryInput = form.querySelector('input[name="categoryId"]');
+  if (typeInput) typeInput.value = 'expense';
+  if (sourceInput) sourceInput.value = 'manual';
+  if (categoryInput) categoryInput.value = state.categories[0]?.id || '';
+
+  form.querySelectorAll('[data-action="manual-type"]').forEach((button) => {
+    button.classList.toggle('active', button.dataset.type === 'expense');
+    button.classList.toggle('green', button.dataset.type === 'income');
+  });
+  form.querySelectorAll('[data-action="manual-source"]').forEach((button) => {
+    button.classList.toggle('active', button.dataset.source === 'manual');
+  });
+  form.querySelectorAll('[data-action="select-category"]').forEach((button) => {
+    button.classList.toggle('active', button.dataset.categoryId === (state.categories[0]?.id || ''));
+  });
+}
+
+function createEmptyReceiptDraft() {
+  return {
+    merchant: '',
+    amount: '',
+    categoryId: firstExpenseCategory()?.id || state.categories[0]?.id || '',
+    note: '',
+    reader: null,
+    confidence: null,
+    converted: false,
+    originalAmount: null,
+    originalCurrency: null,
+    currency: state.user?.currency || 'NGN',
+    status: 'idle',
+    error: '',
+  };
 }
 
 async function api(url, options = {}) {
