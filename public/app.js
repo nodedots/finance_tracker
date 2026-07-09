@@ -221,7 +221,7 @@ function renderLanding() {
         <div class="footer-row">
           <span>&copy; 2026 Fintrack. All rights reserved.</span>
           <nav>
-            <a href="https://github.com/sgukobong/fintrack_app" target="_blank" rel="noreferrer">GitHub</a>
+            <a href="https://github.com/nodedots/finance_tracker" target="_blank" rel="noreferrer">GitHub</a>
             <a href="/legal" data-link>Legal</a>
           </nav>
         </div>
