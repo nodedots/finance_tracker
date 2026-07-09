@@ -64,7 +64,7 @@ GEMINI_API_KEY="your-api-key"
 GEMINI_MODEL="gemini-2.5-flash"
 
 # Optional: exchange rates for converting receipt currencies into the user's default currency
-EXCHANGE_RATE_API_URL="https://open.er-api.com/v6/latest/{base}"
+EXCHANGE_RATE_API_URL="https://v6.exchangerate-api.com/v6/latest/{base}"
 
 DATABASE_URL=file:./dev.db
 
