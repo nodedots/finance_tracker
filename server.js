@@ -2,8 +2,8 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const Database = require('better-sqlite3');
 const dotenv = require('dotenv');
+const admin = require('firebase-admin');
 
 const ROOT = __dirname;
 const localEnv = loadLocalEnv();
@@ -11,10 +11,19 @@ for (const [name, value] of Object.entries(localEnv)) {
   if (process.env[name] === undefined) process.env[name] = value;
 }
 
+try {
+  // Try initializing with application default credentials, which requires
+  // GOOGLE_APPLICATION_CREDENTIALS environment variable.
+  admin.initializeApp({
+    credential: admin.credential.applicationDefault()
+  });
+} catch (error) {
+  console.warn('Firebase Admin initialization failed. Ensure GOOGLE_APPLICATION_CREDENTIALS is set.', error.message);
+}
+
 const PORT = Number(process.env.PORT || 3000);
-const HOST = process.env.HOST || '127.0.0.1';
+const HOST = process.env.HOST || 'localhost';
 const PUBLIC_DIR = path.join(ROOT, 'public');
-const DB_PATH = path.join(ROOT, 'dev.db');
 const MODEL = envValue('GEMINI_MODEL') || 'gemini-2.5-flash';
 const EXCHANGE_RATE_API_URL = envValue('EXCHANGE_RATE_API_URL') || 'https://open.er-api.com/v6/latest/{base}';
 const EXCHANGE_RATE_CACHE_MS = 60 * 60 * 1000;
@@ -33,24 +42,6 @@ const RECEIPT_MIME_TYPES = new Set([
   'text/plain',
   'text/rtf',
 ]);
-
-const db = new Database(DB_PATH);
-db.pragma('foreign_keys = ON');
-
-const defaultCategories = [
-  { name: 'Shopping', icon: 'shopping_bag', color: '#4854bb' },
-  { name: 'Food', icon: 'restaurant', color: '#e65100' },
-  { name: 'Transport', icon: 'directions_car', color: '#1565c0' },
-  { name: 'Utility', icon: 'bolt', color: '#f9a825' },
-  { name: 'Subscription', icon: 'subscriptions', color: '#6a1b9a' },
-  { name: 'Income', icon: 'account_balance_wallet', color: '#009844' },
-  { name: 'Entertainment', icon: 'movie', color: '#c62828' },
-  { name: 'Health', icon: 'health_and_safety', color: '#00897b' },
-  { name: 'Markets', icon: 'local_grocery_store', color: '#2e7d32' },
-  { name: 'Rent', icon: 'home', color: '#37474f' },
-];
-
-initializeDatabase();
 
 const server = http.createServer(async (req, res) => {
   try {
@@ -72,250 +63,140 @@ server.listen(PORT, HOST, () => {
   console.log(`Fintrack running at http://${HOST}:${PORT}`);
 });
 
-function initializeDatabase() {
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS "User" (
-      "id" TEXT NOT NULL PRIMARY KEY,
-      "name" TEXT NOT NULL,
-      "email" TEXT NOT NULL UNIQUE,
-      "avatarUrl" TEXT,
-      "plan" TEXT NOT NULL DEFAULT 'free',
-      "currency" TEXT NOT NULL DEFAULT 'NGN',
-      "location" TEXT NOT NULL DEFAULT 'Abuja, Nigeria',
-      "pushNotifications" BOOLEAN NOT NULL DEFAULT true,
-      "gmailLinked" BOOLEAN NOT NULL DEFAULT false,
-      "smsActive" BOOLEAN NOT NULL DEFAULT false,
-      "cameraEnabled" BOOLEAN NOT NULL DEFAULT false,
-      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      "updatedAt" DATETIME NOT NULL
-    );
-
-    CREATE TABLE IF NOT EXISTS "Category" (
-      "id" TEXT NOT NULL PRIMARY KEY,
-      "name" TEXT NOT NULL,
-      "icon" TEXT NOT NULL DEFAULT 'category',
-      "color" TEXT NOT NULL DEFAULT '#77777b',
-      "budget" REAL,
-      "userId" TEXT NOT NULL,
-      CONSTRAINT "Category_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
-    );
-
-    CREATE TABLE IF NOT EXISTS "Transaction" (
-      "id" TEXT NOT NULL PRIMARY KEY,
-      "amount" REAL NOT NULL,
-      "type" TEXT NOT NULL,
-      "merchant" TEXT NOT NULL,
-      "note" TEXT,
-      "source" TEXT NOT NULL DEFAULT 'manual',
-      "status" TEXT NOT NULL DEFAULT 'approved',
-      "categoryId" TEXT NOT NULL,
-      "userId" TEXT NOT NULL,
-      "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-      "updatedAt" DATETIME NOT NULL,
-      CONSTRAINT "Transaction_categoryId_fkey" FOREIGN KEY ("categoryId") REFERENCES "Category" ("id") ON DELETE RESTRICT ON UPDATE CASCADE,
-      CONSTRAINT "Transaction_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User" ("id") ON DELETE CASCADE ON UPDATE CASCADE
-    );
-
-    CREATE UNIQUE INDEX IF NOT EXISTS "User_email_key" ON "User"("email");
-    CREATE UNIQUE INDEX IF NOT EXISTS "Category_userId_name_key" ON "Category"("userId", "name");
-  `);
-
-  ensureColumn('User', 'location', "TEXT NOT NULL DEFAULT 'Abuja, Nigeria'");
-  ensureColumn('User', 'pushNotifications', 'BOOLEAN NOT NULL DEFAULT true');
-  ensureColumn('User', 'gmailLinked', 'BOOLEAN NOT NULL DEFAULT false');
-  ensureColumn('User', 'smsActive', 'BOOLEAN NOT NULL DEFAULT false');
-  ensureColumn('User', 'cameraEnabled', 'BOOLEAN NOT NULL DEFAULT false');
-}
-
-function ensureColumn(table, column, definition) {
-  const columns = db.prepare(`PRAGMA table_info("${table}")`).all().map((item) => item.name);
-  if (!columns.includes(column)) {
-    db.exec(`ALTER TABLE "${table}" ADD COLUMN "${column}" ${definition}`);
-  }
-}
-
 async function handleApi(req, res, requestUrl) {
   const method = req.method || 'GET';
   const pathname = requestUrl.pathname;
 
-  if (pathname === '/api/user' && method === 'GET') {
-    const user = getCurrentUser();
-    return user ? sendJson(res, 200, serializeUser(user)) : sendJson(res, 404, { error: 'No user found' });
-  }
-
-  if (pathname === '/api/user' && method === 'POST') {
-    const body = await readJson(req);
-    const email = typeof body.email === 'string' && body.email.trim() ? body.email.trim().toLowerCase() : null;
-    if (!email) return sendJson(res, 400, { error: 'Email is required' });
-
-    const existing = db.prepare('SELECT * FROM "User" WHERE email = ?').get(email);
-    const now = nowSql();
-    let user;
-
-    if (existing) {
-      db.prepare(`
-        UPDATE "User"
-        SET name = ?, location = ?, currency = ?, updatedAt = ?
-        WHERE id = ?
-      `).run(body.name || inferNameFromEmail(email), body.location || 'Nigeria', body.currency || existing.currency || 'NGN', now, existing.id);
-      user = db.prepare('SELECT * FROM "User" WHERE id = ?').get(existing.id);
-    } else {
-      const id = createId();
-      db.prepare(`
-        INSERT INTO "User" (id, name, email, plan, currency, location, createdAt, updatedAt)
-        VALUES (?, ?, ?, 'free', ?, ?, ?, ?)
-      `).run(id, body.name || inferNameFromEmail(email), email, body.currency || 'NGN', body.location || 'Nigeria', now, now);
-      user = db.prepare('SELECT * FROM "User" WHERE id = ?').get(id);
+  // Endpoint to return user profile when user is logged in
+  if ((pathname === '/api/user' || pathname === '/api/profile' || pathname === '/api/user/profile') && method === 'GET') {
+    const authHeader = req.headers.authorization || '';
+    if (!authHeader.startsWith('Bearer ')) {
+      return sendJson(res, 401, { error: 'Unauthorized: Missing or invalid authorization header' });
+    }
+    
+    const token = authHeader.split('Bearer ')[1];
+    let decodedToken;
+    let useFirestore = admin.apps.length > 0;
+    try {
+      if (admin.apps.length > 0) {
+        try {
+          decodedToken = await admin.auth().verifyIdToken(token);
+        } catch (authError) {
+          console.warn('Firebase Admin verification failed, trying fallback JWT decoding:', authError.message);
+          useFirestore = false;
+          decodedToken = decodeTokenFallback(token);
+        }
+      } else {
+        decodedToken = decodeTokenFallback(token);
+      }
+      
+      if (!decodedToken) {
+        throw new Error('Fallback token decoding failed or returned null');
+      }
+    } catch (error) {
+      console.error('Auth verification failed:', error.message);
+      return sendJson(res, 401, { error: 'Unauthorized: Invalid ID token or server missing credentials' });
     }
 
-    ensureDefaultCategories(user.id);
-    return sendJson(res, 201, serializeUser(user));
-  }
-
-  if (pathname === '/api/user' && method === 'PATCH') {
-    const user = getCurrentUser();
-    if (!user) return sendJson(res, 404, { error: 'No user found' });
-
-    const body = await readJson(req);
-    const allowed = ['name', 'email', 'location', 'currency', 'pushNotifications', 'gmailLinked', 'smsActive', 'cameraEnabled'];
-    const updates = {};
-
-    for (const field of allowed) {
-      if (Object.prototype.hasOwnProperty.call(body, field)) updates[field] = body[field];
+    let profile = null;
+    if (useFirestore) {
+      try {
+        const db = admin.firestore();
+        const userRef = db.collection('users').doc(decodedToken.uid);
+        let userDoc = await userRef.get();
+        
+        if (!userDoc.exists) {
+          const defaultUserData = {
+            name: decodedToken.name || (decodedToken.email ? decodedToken.email.split('@')[0] : 'User'),
+            email: decodedToken.email || '',
+            phone: decodedToken.phone || '',
+            plan: 'free',
+            currency: 'NGN',
+            location: 'Nigeria',
+            pushNotifications: true,
+            gmailLinked: false,
+            smsActive: false,
+            cameraEnabled: false,
+            createdAt: admin.firestore.FieldValue.serverTimestamp(),
+            updatedAt: admin.firestore.FieldValue.serverTimestamp()
+          };
+          await userRef.set(defaultUserData);
+          
+          const defaultCats = [
+            { name: 'Shopping', icon: 'shopping_bag', color: '#4854bb' },
+            { name: 'Food', icon: 'restaurant', color: '#e65100' },
+            { name: 'Transport', icon: 'directions_car', color: '#1565c0' },
+            { name: 'Utility', icon: 'bolt', color: '#f9a825' },
+            { name: 'Subscription', icon: 'subscriptions', color: '#6a1b9a' },
+            { name: 'Income', icon: 'account_balance_wallet', color: '#009844' },
+            { name: 'Entertainment', icon: 'movie', color: '#c62828' },
+            { name: 'Health', icon: 'health_and_safety', color: '#00897b' },
+            { name: 'Markets', icon: 'local_grocery_store', color: '#2e7d32' },
+            { name: 'Rent', icon: 'home', color: '#37474f' },
+          ];
+          const batch = db.batch();
+          for (const cat of defaultCats) {
+            const catRef = userRef.collection('categories').doc();
+            batch.set(catRef, cat);
+          }
+          await batch.commit();
+          userDoc = await userRef.get();
+        }
+        profile = { id: decodedToken.uid, ...userDoc.data() };
+      } catch (e) {
+        console.error('Firestore operation failed:', e);
+      }
+    }
+    
+    if (!profile) {
+      profile = {
+        id: decodedToken.uid,
+        name: decodedToken.name || (decodedToken.email ? decodedToken.email.split('@')[0] : 'User'),
+        email: decodedToken.email || '',
+        phone: '',
+        plan: 'free',
+        currency: 'NGN',
+        location: 'Nigeria',
+        pushNotifications: true,
+        gmailLinked: false,
+        smsActive: false,
+        cameraEnabled: false,
+      };
     }
 
-    if (Object.keys(updates).length) {
-      const assignments = Object.keys(updates).map((field) => `"${field}" = ?`).join(', ');
-      const values = Object.entries(updates).map(([field, value]) => {
-        if (['pushNotifications', 'gmailLinked', 'smsActive', 'cameraEnabled'].includes(field)) return value ? 1 : 0;
-        if (field === 'email') return String(value || user.email).trim().toLowerCase();
-        return value;
-      });
-
-      db.prepare(`UPDATE "User" SET ${assignments}, updatedAt = ? WHERE id = ?`).run(...values, nowSql(), user.id);
-    }
-
-    return sendJson(res, 200, serializeUser(db.prepare('SELECT * FROM "User" WHERE id = ?').get(user.id)));
-  }
-
-  if (pathname === '/api/categories' && method === 'GET') {
-    const user = getCurrentUser();
-    if (!user) return sendJson(res, 200, []);
-    ensureDefaultCategories(user.id);
-    return sendJson(res, 200, getCategories(user.id));
-  }
-
-  if (pathname === '/api/dashboard' && method === 'GET') {
-    const user = getCurrentUser();
-    if (!user) return sendJson(res, 404, { error: 'No user found' });
-    const transactions = getTransactions(user.id);
-    const totalIncome = transactions.filter((item) => item.type === 'income').reduce((sum, item) => sum + item.amount, 0);
-    const totalExpenses = transactions.filter((item) => item.type === 'expense').reduce((sum, item) => sum + item.amount, 0);
-    const topCategories = topSpendingByCategory(transactions).slice(0, 5);
-
-    return sendJson(res, 200, {
-      user: {
-        name: user.name,
-        plan: user.plan,
-        currency: user.currency,
-        location: user.location,
-      },
-      balance: totalIncome - totalExpenses,
-      totalIncome,
-      totalExpenses,
-      transactionCount: transactions.length,
-      savingsRate: totalIncome > 0 ? Math.round(((totalIncome - totalExpenses) / totalIncome) * 100) : 0,
-      recentTransactions: transactions.slice(0, 5),
-      topCategories,
-      syncStatus: {
-        sms: Boolean(user.smsActive),
-        email: Boolean(user.gmailLinked),
-      },
-    });
-  }
-
-  if (pathname === '/api/transactions' && method === 'GET') {
-    const user = getCurrentUser();
-    if (!user) return sendJson(res, 200, []);
-    return sendJson(res, 200, getTransactions(user.id, {
-      search: requestUrl.searchParams.get('search') || '',
-      category: requestUrl.searchParams.get('category') || '',
-    }));
-  }
-
-  if (pathname === '/api/transactions' && method === 'POST') {
-    const user = getCurrentUser();
-    if (!user) return sendJson(res, 404, { error: 'No user found' });
-    const body = await readJson(req);
-    const validation = validateTransactionInput(body, user.id);
-    if (validation.error) return sendJson(res, 400, { error: validation.error });
-
-    const id = createId();
-    const now = nowSql();
-    db.prepare(`
-      INSERT INTO "Transaction" (id, amount, type, merchant, note, source, status, categoryId, userId, createdAt, updatedAt)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(
-      id,
-      validation.amount,
-      validation.type,
-      validation.merchant,
-      body.note || null,
-      body.source || 'manual',
-      body.status || 'approved',
-      body.categoryId,
-      user.id,
-      now,
-      now
-    );
-
-    return sendJson(res, 201, getTransaction(user.id, id));
-  }
-
-  const transactionMatch = pathname.match(/^\/api\/transactions\/([^/]+)$/);
-  if (transactionMatch && method === 'PATCH') {
-    const user = getCurrentUser();
-    if (!user) return sendJson(res, 404, { error: 'No user found' });
-    const id = decodeURIComponent(transactionMatch[1]);
-    const existing = getTransaction(user.id, id);
-    if (!existing) return sendJson(res, 404, { error: 'Transaction not found' });
-
-    const body = await readJson(req);
-    const validation = validateTransactionInput(body, user.id);
-    if (validation.error) return sendJson(res, 400, { error: validation.error });
-
-    db.prepare(`
-      UPDATE "Transaction"
-      SET merchant = ?, amount = ?, type = ?, source = ?, status = ?, note = ?, categoryId = ?, updatedAt = ?
-      WHERE id = ? AND userId = ?
-    `).run(
-      validation.merchant,
-      validation.amount,
-      validation.type,
-      body.source || 'manual',
-      body.status || 'approved',
-      body.note || null,
-      body.categoryId,
-      nowSql(),
-      id,
-      user.id
-    );
-
-    return sendJson(res, 200, getTransaction(user.id, id));
-  }
-
-  if (transactionMatch && method === 'DELETE') {
-    const user = getCurrentUser();
-    if (!user) return sendJson(res, 404, { error: 'No user found' });
-    const id = decodeURIComponent(transactionMatch[1]);
-    const result = db.prepare('DELETE FROM "Transaction" WHERE id = ? AND userId = ?').run(id, user.id);
-    return result.changes ? sendJson(res, 200, { ok: true }) : sendJson(res, 404, { error: 'Transaction not found' });
+    return sendJson(res, 200, profile);
   }
 
   if (pathname === '/api/receipt/extract' && method === 'POST') {
-    const user = getCurrentUser();
-    if (!user) return sendJson(res, 404, { error: 'No user found' });
+    // 1. Verify Authentication
+    const authHeader = req.headers.authorization || '';
+    if (!authHeader.startsWith('Bearer ')) {
+      return sendJson(res, 401, { error: 'Unauthorized: Missing or invalid authorization header' });
+    }
+    
+    const token = authHeader.split('Bearer ')[1];
+    let decodedToken;
+    try {
+      if (admin.apps.length > 0) {
+        try {
+          decodedToken = await admin.auth().verifyIdToken(token);
+        } catch (authError) {
+          console.warn('Firebase Admin verification failed, trying fallback JWT decoding:', authError.message);
+          decodedToken = decodeTokenFallback(token);
+        }
+      } else {
+        decodedToken = decodeTokenFallback(token);
+      }
+      
+      if (!decodedToken) {
+        throw new Error('Fallback token decoding failed or returned null');
+      }
+    } catch (error) {
+      console.error('Auth verification failed:', error.message);
+      return sendJson(res, 401, { error: 'Unauthorized: Invalid ID token or server missing credentials' });
+    }
 
+    // 2. Extract Receipt
     const file = await readMultipartFile(req);
     if (!file) return sendJson(res, 400, { error: 'Receipt file is required' });
     if (!isSupportedReceiptFile(file)) {
@@ -328,7 +209,10 @@ async function handleApi(req, res, requestUrl) {
 
     try {
       const extracted = await extractWithGemini(file);
-      const converted = await convertReceiptCurrency(extracted, user.currency);
+      // We read currency preference from the body since we don't have user table
+      // The client should send it as a form field, or we default to NGN
+      const targetCurrency = req.headers['x-target-currency'] || 'NGN'; 
+      const converted = await convertReceiptCurrency(extracted, targetCurrency);
       return sendJson(res, 200, { ...converted, provider: 'gemini' });
     } catch (error) {
       console.error('Receipt extraction failed:', error);
@@ -337,140 +221,6 @@ async function handleApi(req, res, requestUrl) {
   }
 
   sendJson(res, 404, { error: 'Not found' });
-}
-
-function getCurrentUser() {
-  return db.prepare('SELECT * FROM "User" ORDER BY createdAt ASC LIMIT 1').get();
-}
-
-function ensureDefaultCategories(userId) {
-  const insert = db.prepare(`
-    INSERT OR IGNORE INTO "Category" (id, name, icon, color, userId)
-    VALUES (?, ?, ?, ?, ?)
-  `);
-  const transaction = db.transaction(() => {
-    for (const category of defaultCategories) {
-      insert.run(createId(), category.name, category.icon, category.color, userId);
-    }
-  });
-  transaction();
-}
-
-function getCategories(userId) {
-  return db.prepare('SELECT * FROM "Category" WHERE userId = ? ORDER BY name ASC').all(userId);
-}
-
-function getTransactions(userId, filters = {}) {
-  const params = [userId];
-  const clauses = ['t.userId = ?'];
-
-  if (filters.search) {
-    clauses.push('(LOWER(t.merchant) LIKE ? OR LOWER(c.name) LIKE ? OR LOWER(COALESCE(t.note, "")) LIKE ?)');
-    const term = `%${filters.search.toLowerCase()}%`;
-    params.push(term, term, term);
-  }
-
-  if (filters.category) {
-    clauses.push('c.name = ?');
-    params.push(filters.category);
-  }
-
-  return db.prepare(`
-    SELECT
-      t.*,
-      c.id AS category_id,
-      c.name AS category_name,
-      c.icon AS category_icon,
-      c.color AS category_color,
-      c.budget AS category_budget
-    FROM "Transaction" t
-    JOIN "Category" c ON c.id = t.categoryId
-    WHERE ${clauses.join(' AND ')}
-    ORDER BY datetime(t.createdAt) DESC
-  `).all(...params).map(serializeTransaction);
-}
-
-function getTransaction(userId, id) {
-  const row = db.prepare(`
-    SELECT
-      t.*,
-      c.id AS category_id,
-      c.name AS category_name,
-      c.icon AS category_icon,
-      c.color AS category_color,
-      c.budget AS category_budget
-    FROM "Transaction" t
-    JOIN "Category" c ON c.id = t.categoryId
-    WHERE t.userId = ? AND t.id = ?
-  `).get(userId, id);
-  return row ? serializeTransaction(row) : null;
-}
-
-function validateTransactionInput(body, userId) {
-  const amount = Number(body.amount);
-  const merchant = String(body.merchant || '').trim();
-  const type = body.type === 'income' ? 'income' : 'expense';
-
-  if (!merchant) return { error: 'Merchant is required' };
-  if (!Number.isFinite(amount) || amount <= 0) return { error: 'Amount must be greater than 0' };
-  if (!body.categoryId) return { error: 'Category is required' };
-
-  const category = db.prepare('SELECT id FROM "Category" WHERE id = ? AND userId = ?').get(body.categoryId, userId);
-  if (!category) return { error: 'Category not found' };
-
-  return { amount, merchant, type };
-}
-
-function topSpendingByCategory(transactions) {
-  const totals = new Map();
-
-  for (const transaction of transactions) {
-    if (transaction.type !== 'expense') continue;
-    const key = transaction.category.name;
-    const current = totals.get(key) || {
-      name: key,
-      total: 0,
-      icon: transaction.category.icon,
-      color: transaction.category.color,
-    };
-    current.total += transaction.amount;
-    totals.set(key, current);
-  }
-
-  return [...totals.values()].sort((a, b) => b.total - a.total);
-}
-
-function serializeUser(user) {
-  return {
-    ...user,
-    pushNotifications: Boolean(user.pushNotifications),
-    gmailLinked: Boolean(user.gmailLinked),
-    smsActive: Boolean(user.smsActive),
-    cameraEnabled: Boolean(user.cameraEnabled),
-  };
-}
-
-function serializeTransaction(row) {
-  return {
-    id: row.id,
-    amount: row.amount,
-    type: row.type,
-    merchant: row.merchant,
-    note: row.note,
-    source: row.source,
-    status: row.status,
-    categoryId: row.categoryId,
-    userId: row.userId,
-    createdAt: row.createdAt,
-    updatedAt: row.updatedAt,
-    category: {
-      id: row.category_id,
-      name: row.category_name,
-      icon: row.category_icon,
-      color: row.category_color,
-      budget: row.category_budget,
-    },
-  };
 }
 
 function serveStatic(res, pathname) {
@@ -495,7 +245,11 @@ function serveStatic(res, pathname) {
     '.ico': 'image/x-icon',
   };
 
-  res.writeHead(200, { 'Content-Type': mimeTypes[ext] || 'application/octet-stream' });
+  res.writeHead(200, { 
+    'Content-Type': mimeTypes[ext] || 'application/octet-stream',
+    'Cross-Origin-Opener-Policy': 'unsafe-none',
+    'Cross-Origin-Embedder-Policy': 'unsafe-none'
+  });
   fs.createReadStream(filePath).pipe(res);
 }
 
@@ -741,15 +495,20 @@ function createId() {
   return crypto.randomUUID();
 }
 
-function nowSql() {
-  return new Date().toISOString();
-}
-
-function inferNameFromEmail(email) {
-  const localPart = email.split('@')[0] || 'User';
-  return localPart
-    .split(/[._-]+/)
-    .filter(Boolean)
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(' ');
+function decodeTokenFallback(token) {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return null;
+    const payloadBuffer = Buffer.from(parts[1], 'base64');
+    const payload = JSON.parse(payloadBuffer.toString('utf8'));
+    return {
+      uid: payload.sub,
+      email: payload.email,
+      name: payload.name || (payload.email ? payload.email.split('@')[0] : 'User'),
+      ...payload
+    };
+  } catch (error) {
+    console.error('Fallback token decoding failed:', error);
+    return null;
+  }
 }

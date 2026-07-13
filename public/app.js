@@ -1,4 +1,52 @@
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { 
+  getAuth, 
+  signInWithEmailAndPassword, 
+  createUserWithEmailAndPassword, 
+  onAuthStateChanged, 
+  signOut,
+  GoogleAuthProvider,
+  signInWithPopup,
+  signInWithRedirect,
+  getRedirectResult,
+  RecaptchaVerifier,
+  signInWithPhoneNumber
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, initializeFirestore, collection, getDocs, doc, getDoc, setDoc, addDoc, updateDoc, deleteDoc, query, where, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyBMwk_CY8S2fV1cYaQYX_nEaMVlEdpOxv4",
+  authDomain: "fintrack-5379c.firebaseapp.com",
+  projectId: "fintrack-5379c",
+  storageBucket: "fintrack-5379c.firebasestorage.app",
+  messagingSenderId: "842419163448",
+  appId: "1:842419163448:web:a2ce9e11f33de86a4f71cd",
+  measurementId: "G-D0D2SGZBWG"
+};
+
+const firebaseApp = initializeApp(firebaseConfig);
+const auth = getAuth(firebaseApp);
+const db = initializeFirestore(firebaseApp, { experimentalForceLongPolling: true });
+const storage = getStorage(firebaseApp);
+const googleProvider = new GoogleAuthProvider();
+
 const app = document.getElementById('app');
+let isBooted = false;
+
+// Handle Redirect Result for Google Auth
+getRedirectResult(auth).then(async (result) => {
+  if (result && result.user) {
+    await initializeNewUser(result.user, '');
+    state.authModalOpen = false;
+    navigate('/dashboard');
+  }
+}).catch((error) => {
+  console.error("Redirect auth error:", error);
+  state.message = "Authentication failed: " + error.message;
+  render();
+});
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: 'grid_view' },
@@ -36,6 +84,8 @@ const state = {
   onboardingStep: 0,
   scanMode: 'receipt',
   receiptFile: null,
+  authMode: 'email',
+  confirmationResult: null,
   receiptDraft: {
     merchant: '',
     amount: '',
@@ -66,16 +116,43 @@ document.addEventListener('submit', handleSubmit);
 document.addEventListener('change', handleChange);
 document.addEventListener('input', handleInput);
 
-boot();
 
-async function boot() {
-  await refreshBaseData();
-  render();
-}
+onAuthStateChanged(auth, async (user) => {
+  if (user) {
+    await refreshBaseData();
+  } else {
+    state.user = null;
+    state.categories = [];
+    state.dashboard = null;
+    state.transactions = [];
+  }
+  
+  if (!isBooted) {
+    isBooted = true;
+    render();
+  } else {
+    if (!user && location.pathname !== '/' && !['/terms', '/privacy', '/support'].includes(location.pathname)) {
+      navigate('/');
+    } else {
+      render();
+    }
+  }
+});
 
 async function refreshBaseData() {
-  state.user = await api('/api/user').catch(() => null);
-  state.categories = await api('/api/categories').catch(() => []);
+  if (!auth.currentUser) return;
+  const userRef = doc(db, 'users', auth.currentUser.uid);
+  let userDoc = await getDoc(userRef);
+  
+  if (!userDoc.exists()) {
+    await initializeNewUser(auth.currentUser, auth.currentUser.displayName || '');
+    userDoc = await getDoc(userRef);
+  }
+  
+  state.user = { id: auth.currentUser.uid, ...userDoc.data() };
+  const catsSnap = await getDocs(collection(db, 'users', auth.currentUser.uid, 'categories'));
+  state.categories = catsSnap.docs.map(d => ({ id: d.id, ...d.data() })).sort((a,b) => a.name.localeCompare(b.name));
+
   if (!state.receiptDraft.categoryId) {
     state.receiptDraft.categoryId = categoryIdForName('Markets') || firstExpenseCategory()?.id || state.categories[0]?.id || '';
   }
@@ -85,12 +162,26 @@ async function render() {
   const path = normalizePath(location.pathname);
 
   if (path === '/') {
+    if (auth.currentUser) {
+      setTimeout(() => navigate('/dashboard'), 0);
+      return;
+    }
     app.innerHTML = renderLanding();
     return;
   }
 
-  if (path === '/legal') {
-    app.innerHTML = renderLegal();
+  if (path === '/terms') {
+    app.innerHTML = renderTerms();
+    return;
+  }
+
+  if (path === '/privacy') {
+    app.innerHTML = renderPrivacy();
+    return;
+  }
+
+  if (path === '/support') {
+    app.innerHTML = renderSupport();
     return;
   }
 
@@ -129,12 +220,56 @@ async function render() {
 
 async function refreshDashboard() {
   await refreshBaseData();
-  state.dashboard = state.user ? await api('/api/dashboard').catch(() => null) : null;
+  if (!state.user) {
+    state.dashboard = null;
+    return;
+  }
+  await refreshTransactions();
+  const txns = state.transactions;
+  const totalIncome = txns.filter(t => t.type === 'income').reduce((sum, t) => sum + t.amount, 0);
+  const totalExpenses = txns.filter(t => t.type === 'expense').reduce((sum, t) => sum + t.amount, 0);
+  
+  const totals = new Map();
+  for (const t of txns) {
+    if (t.type !== 'expense') continue;
+    const key = t.category.name;
+    const current = totals.get(key) || { name: key, total: 0, icon: t.category.icon, color: t.category.color };
+    current.total += t.amount;
+    totals.set(key, current);
+  }
+  const topCategories = [...totals.values()].sort((a, b) => b.total - a.total).slice(0, 5);
+  
+  state.dashboard = {
+    user: state.user,
+    balance: totalIncome - totalExpenses,
+    totalIncome,
+    totalExpenses,
+    transactionCount: txns.length,
+    savingsRate: totalIncome > 0 ? Math.round(((totalIncome - totalExpenses) / totalIncome) * 100) : 0,
+    recentTransactions: txns.slice(0, 5),
+    topCategories,
+    syncStatus: { sms: Boolean(state.user.smsActive), email: Boolean(state.user.gmailLinked) }
+  };
 }
 
 async function refreshTransactions() {
   await refreshBaseData();
-  state.transactions = state.user ? await api('/api/transactions').catch(() => []) : [];
+  if (!state.user) {
+    state.transactions = [];
+    return;
+  }
+  const q = query(collection(db, 'users', auth.currentUser.uid, 'transactions'), orderBy('createdAt', 'desc'));
+  const snap = await getDocs(q);
+  state.transactions = snap.docs.map(d => {
+    const data = d.data();
+    const cat = state.categories.find(c => c.id === data.categoryId) || {};
+    return {
+      id: d.id,
+      ...data,
+      createdAt: data.createdAt?.toDate ? data.createdAt.toDate().toISOString() : new Date().toISOString(),
+      category: cat
+    };
+  });
 }
 
 function renderLanding() {
@@ -222,7 +357,9 @@ function renderLanding() {
           <span>&copy; 2026 Fintrack. All rights reserved.</span>
           <nav>
             <a href="https://github.com/nodedots/finance_tracker" target="_blank" rel="noreferrer">GitHub</a>
-            <a href="/legal" data-link>Legal</a>
+            <a href="/terms" data-link>Terms</a>
+            <a href="/privacy" data-link>Privacy</a>
+            <a href="/support" data-link>Support</a>
           </nav>
         </div>
       </footer>
@@ -245,14 +382,51 @@ function renderFeature(href, icon, title, detail) {
   `;
 }
 
+async function initializeNewUser(user, name, location = 'Nigeria') {
+  const uid = user.uid;
+  const userRef = doc(db, 'users', uid);
+  const snap = await getDoc(userRef);
+  if (!snap.exists()) {
+    await setDoc(userRef, {
+      name: name || user.displayName || (user.email ? user.email.split('@')[0] : 'User'),
+      email: user.email || '',
+      phone: user.phoneNumber || '',
+      plan: 'free',
+      currency: 'NGN',
+      location: location,
+      pushNotifications: true,
+      gmailLinked: false,
+      smsActive: false,
+      cameraEnabled: false,
+      createdAt: serverTimestamp(),
+      updatedAt: serverTimestamp()
+    });
+    const defaultCats = [
+      { name: 'Shopping', icon: 'shopping_bag', color: '#4854bb' },
+      { name: 'Food', icon: 'restaurant', color: '#e65100' },
+      { name: 'Transport', icon: 'directions_car', color: '#1565c0' },
+      { name: 'Utility', icon: 'bolt', color: '#f9a825' },
+      { name: 'Subscription', icon: 'subscriptions', color: '#6a1b9a' },
+      { name: 'Income', icon: 'account_balance_wallet', color: '#009844' },
+      { name: 'Entertainment', icon: 'movie', color: '#c62828' },
+      { name: 'Health', icon: 'health_and_safety', color: '#00897b' },
+      { name: 'Markets', icon: 'local_grocery_store', color: '#2e7d32' },
+      { name: 'Rent', icon: 'home', color: '#37474f' },
+    ];
+    await Promise.all(defaultCats.map(c => addDoc(collection(db, 'users', uid, 'categories'), c)));
+  }
+}
+
 function renderAuthModal() {
-  return `
-    <div class="modal-backdrop" data-action="close-auth">
-      <form class="modal form-stack" data-form="auth">
+  let modalContent = '';
+
+  if (state.authMode === 'phone-input') {
+    modalContent = `
+      <form class="modal form-stack" data-form="phone-auth">
         <div class="modal-head">
           <div>
-            <p class="eyebrow">Local account</p>
-            <h2>Sign in to Fintrack</h2>
+            <p class="eyebrow">Phone Login</p>
+            <h2>Enter your number</h2>
           </div>
           <button class="icon-btn" type="button" data-action="close-auth" aria-label="Close">
             <span class="material-symbols-outlined">close</span>
@@ -260,7 +434,70 @@ function renderAuthModal() {
         </div>
         ${state.message ? `<p class="notice error">${escapeHtml(state.message)}</p>` : ''}
         <label class="field">
-          <span>Name</span>
+          <span>Phone Number</span>
+          <input name="phone" type="tel" placeholder="+234800000000" required>
+        </label>
+        <div id="recaptcha-container"></div>
+        <button class="btn full large" type="submit">Send Code</button>
+        <button class="btn text full" type="button" data-action="auth-mode" data-mode="email" style="margin-top: 8px;">Back to Email</button>
+      </form>
+    `;
+  } else if (state.authMode === 'phone-verify') {
+    modalContent = `
+      <form class="modal form-stack" data-form="phone-verify">
+        <div class="modal-head">
+          <div>
+            <p class="eyebrow">Phone Login</p>
+            <h2>Verification Code</h2>
+          </div>
+          <button class="icon-btn" type="button" data-action="close-auth" aria-label="Close">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        ${state.message ? `<p class="notice error">${escapeHtml(state.message)}</p>` : ''}
+        <p style="color:var(--muted);font-size:14px;margin-bottom:8px">Enter the 6-digit code sent to your phone.</p>
+        <label class="field">
+          <span>OTP Code</span>
+          <input name="otp" type="text" placeholder="123456" required>
+        </label>
+        <button class="btn full large" type="submit">Verify Code</button>
+        <button class="btn text full" type="button" data-action="auth-mode" data-mode="phone-input" style="margin-top: 8px;">Back</button>
+      </form>
+    `;
+  } else {
+    // Default Email Mode with OAuth options
+    modalContent = `
+      <form class="modal form-stack" data-form="auth">
+        <div class="modal-head">
+          <div>
+            <p class="eyebrow">Welcome</p>
+            <h2>Sign in to Fintrack</h2>
+          </div>
+          <button class="icon-btn" type="button" data-action="close-auth" aria-label="Close">
+            <span class="material-symbols-outlined">close</span>
+          </button>
+        </div>
+        ${state.message ? `<p class="notice error">${escapeHtml(state.message)}</p>` : ''}
+        
+        <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:12px">
+          <button class="btn secondary full large" type="button" data-action="auth-google" style="justify-content:center">
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" style="width:18px;margin-right:8px">
+            Continue with Google
+          </button>
+          <button class="btn secondary full large" type="button" data-action="auth-mode" data-mode="phone-input" style="justify-content:center">
+            <span class="material-symbols-outlined" style="margin-right:8px">smartphone</span>
+            Continue with Phone
+          </button>
+        </div>
+        
+        <div style="display:flex;align-items:center;margin:16px 0;">
+          <div style="flex:1;height:1px;background:var(--border)"></div>
+          <span style="padding:0 12px;color:var(--faint);font-size:12px;text-transform:uppercase;font-weight:700">or use email</span>
+          <div style="flex:1;height:1px;background:var(--border)"></div>
+        </div>
+
+        <label class="field">
+          <span>Name (New Account)</span>
           <input name="name" value="${escapeAttr(state.user?.name || '')}" placeholder="Your name">
         </label>
         <label class="field">
@@ -269,6 +506,12 @@ function renderAuthModal() {
         </label>
         <button class="btn full large" type="submit">Continue</button>
       </form>
+    `;
+  }
+
+  return `
+    <div class="modal-backdrop" data-action="close-auth">
+      ${modalContent}
     </div>
   `;
 }
@@ -442,17 +685,17 @@ function renderTransactions() {
     </header>
     <div class="app-content">
       ${state.message ? `<p class="notice error" style="margin-bottom:16px">${escapeHtml(state.message)}</p>` : ''}
-      <div class="toolbar">
-        <label class="search-field">
+      <div class="toolbar" style="flex-wrap: wrap;">
+        <label class="search-field" style="flex: 1 1 100%;">
           <span class="material-symbols-outlined">search</span>
           <input class="input" data-input="search" value="${escapeAttr(state.filters.search)}" placeholder="Search merchants, categories, notes...">
         </label>
-        <select class="select" data-input="source">
+        <select class="select" data-input="source" style="flex: 1;">
           ${['All', 'manual', 'sms', 'email', 'receipt'].map((source) => `<option value="${source}" ${state.filters.source === source ? 'selected' : ''}>${source === 'All' ? 'All sources' : source}</option>`).join('')}
         </select>
-      </div>
-      <div class="chip-row hide-scrollbar">
-        ${categoryNames.map((name) => `<button class="chip ${state.filters.category === name ? 'active' : ''}" data-action="filter-category" data-category="${escapeAttr(name)}">${escapeHtml(name)}</button>`).join('')}
+        <select class="select" data-input="category-select" style="flex: 1;">
+          ${categoryNames.map((name) => `<option value="${escapeAttr(name)}" ${state.filters.category === name ? 'selected' : ''}>${name === 'All' ? 'All categories' : escapeHtml(name)}</option>`).join('')}
+        </select>
       </div>
       ${state.filters.search || state.filters.category !== 'All' || state.filters.source !== 'All'
         ? `<p style="color:var(--faint);font-size:14px">${filtered.length} result${filtered.length === 1 ? '' : 's'}</p>`
@@ -746,14 +989,14 @@ function renderSettings() {
         <div class="settings-list">
           <div class="settings-row">
             <div class="settings-info">
-              <span class="settings-icon" style="background:#000;color:#fff"><span class="material-symbols-outlined">payments</span></span>
+              <span class="settings-icon" style="background:var(--primary);color:#fff"><span class="material-symbols-outlined">payments</span></span>
               <div><p>Default Currency</p><small>${escapeHtml(user.currency)}</small></div>
             </div>
             <select class="select" style="max-width:170px" data-input="currency">
               ${['NGN', 'GHS', 'KES', 'ZAR', 'USD', 'EUR', 'GBP'].map((currency) => `<option value="${currency}" ${currency === user.currency ? 'selected' : ''}>${currency}</option>`).join('')}
             </select>
           </div>
-          ${renderSettingsToggle('notifications_active', 'Push Notifications', 'Instant transaction alerts', 'pushNotifications', user.pushNotifications, '#000', '#fff')}
+          ${renderSettingsToggle('notifications_active', 'Push Notifications', 'Instant transaction alerts', 'pushNotifications', user.pushNotifications, 'var(--primary)', '#fff')}
         </div>
       </section>
     </div>
@@ -841,7 +1084,7 @@ function renderOnboardingConnections(user) {
 function renderConnectionCard(icon, title, detail, field, connected) {
   return `
     <button class="connection-card" data-action="toggle-setting" data-field="${field}">
-      <span class="settings-icon" style="background:${connected ? '#009844' : '#f4f4f5'};color:${connected ? '#fff' : '#52525b'}"><span class="material-symbols-outlined">${icon}</span></span>
+      <span class="settings-icon" style="background:${connected ? 'var(--tertiary)' : '#f4f4f5'};color:${connected ? '#fff' : '#52525b'}"><span class="material-symbols-outlined">${icon}</span></span>
       <span><h3>${escapeHtml(title)}</h3><p>${escapeHtml(detail)}</p></span>
       <span class="eyebrow" style="color:${connected ? '#009844' : 'var(--faint)'}">${connected ? 'Connected' : 'Connect'}</span>
     </button>
@@ -874,17 +1117,64 @@ function renderStatusCard(label, active) {
   return `<div class="status-card ${active ? 'active' : ''}"><p class="eyebrow">${label}</p><strong style="color:${active ? '#009844' : 'var(--muted)'}">${active ? 'Enabled' : 'Skipped'}</strong></div>`;
 }
 
-function renderLegal() {
+function renderTerms() {
   return `
-    <div class="legal-page">
-      <a href="/" class="brand" data-link>
+    <div class="legal-page" style="max-width: 800px; margin: 40px auto; padding: 0 20px;">
+      <a href="/" class="brand" data-link style="margin-bottom: 24px; display: inline-flex;">
         <span class="brand-mark"><span class="material-symbols-outlined">account_balance_wallet</span></span>
         <span class="brand-word">Fintrack</span>
       </a>
-      <h1>Legal</h1>
-      <div class="card" style="padding:24px;line-height:1.7;color:var(--muted)">
-        <p>Fintrack is a local prototype for personal finance tracking. Data is stored in the local SQLite database configured for this project.</p>
-        <p>Do not store production secrets or sensitive financial data in this prototype without adding authentication, encryption, backup, and privacy controls.</p>
+      <h1 style="margin-bottom: 24px;">Terms of Service</h1>
+      <div class="card" style="padding:32px;line-height:1.7;color:var(--text)">
+        <p><strong>Last Updated: July 2026</strong></p>
+        <p>Welcome to Fintrack. By using our application, you agree to these terms. Fintrack is a personal finance tracking tool designed to help you organize your financial data locally.</p>
+        <h3 style="margin-top: 24px;">1. Usage</h3>
+        <p>You may use this app for personal, non-commercial purposes. You are responsible for the accuracy of the data you input and for maintaining the security of your device and Firebase credentials.</p>
+        <h3 style="margin-top: 24px;">2. Disclaimers</h3>
+        <p>Fintrack is provided "as is" without any warranties. We are not financial advisors, and the data presented within the app should not be construed as professional financial advice.</p>
+      </div>
+    </div>
+  `;
+}
+
+function renderPrivacy() {
+  return `
+    <div class="legal-page" style="max-width: 800px; margin: 40px auto; padding: 0 20px;">
+      <a href="/" class="brand" data-link style="margin-bottom: 24px; display: inline-flex;">
+        <span class="brand-mark"><span class="material-symbols-outlined">account_balance_wallet</span></span>
+        <span class="brand-word">Fintrack</span>
+      </a>
+      <h1 style="margin-bottom: 24px;">Privacy Policy</h1>
+      <div class="card" style="padding:32px;line-height:1.7;color:var(--text)">
+        <p><strong>Last Updated: July 2026</strong></p>
+        <p>Your privacy is important to us. Fintrack is built with a local-first philosophy to give you full control over your financial data.</p>
+        <h3 style="margin-top: 24px;">Data Storage</h3>
+        <p>Your data is securely stored using Firebase. Only you have access to your transactions, categories, and settings, protected by your authentication credentials and Firebase Security Rules.</p>
+        <h3 style="margin-top: 24px;">AI Processing</h3>
+        <p>When you upload a receipt, the image is temporarily processed by an AI service to extract transaction details. Images are not permanently stored on third-party servers beyond the extraction process.</p>
+      </div>
+    </div>
+  `;
+}
+
+function renderSupport() {
+  return `
+    <div class="legal-page" style="max-width: 800px; margin: 40px auto; padding: 0 20px;">
+      <a href="/" class="brand" data-link style="margin-bottom: 24px; display: inline-flex;">
+        <span class="brand-mark"><span class="material-symbols-outlined">account_balance_wallet</span></span>
+        <span class="brand-word">Fintrack</span>
+      </a>
+      <h1 style="margin-bottom: 24px;">Support & Help</h1>
+      <div class="card" style="padding:32px;line-height:1.7;color:var(--text)">
+        <p>Need help using Fintrack? We're here to assist you.</p>
+        <h3 style="margin-top: 24px;">Frequently Asked Questions</h3>
+        <ul style="margin-top: 12px; padding-left: 20px;">
+          <li style="margin-bottom: 12px;"><strong>How do I add a receipt?</strong><br>Go to the Dashboard and click the "Scan Receipt" card, or use the floating action button.</li>
+          <li style="margin-bottom: 12px;"><strong>Can I export my data?</strong><br>Currently, data is synced securely to your Firebase project. Export features will be available in future updates.</li>
+          <li style="margin-bottom: 12px;"><strong>How do I change my currency?</strong><br>Navigate to Settings to update your default currency symbol.</li>
+        </ul>
+        <h3 style="margin-top: 24px;">Contact Us</h3>
+        <p>If you encounter bugs or need further assistance, please open an issue on our <a href="https://github.com/nodedots/finance_tracker" target="_blank" style="color:var(--primary);text-decoration:underline;">GitHub repository</a>.</p>
       </div>
     </div>
   `;
@@ -916,7 +1206,44 @@ async function handleDocumentClick(event) {
     if (actionEl.classList.contains('modal-backdrop') && event.target !== actionEl) return;
     state.authModalOpen = false;
     state.message = '';
+    if (window.recaptchaVerifier) {
+      window.recaptchaVerifier.clear();
+      window.recaptchaVerifier = null;
+    }
     render();
+  }
+
+  if (action === 'auth-mode') {
+    state.authMode = actionEl.dataset.mode;
+    state.message = '';
+    if (state.authMode !== 'phone-input' && state.authMode !== 'phone-verify' && window.recaptchaVerifier) {
+      window.recaptchaVerifier.clear();
+      window.recaptchaVerifier = null;
+    }
+    render();
+  }
+
+  if (action === 'auth-google') {
+    try {
+      state.message = 'Connecting to Google...';
+      render();
+      const result = await signInWithPopup(auth, googleProvider);
+      if (result && result.user) {
+        await initializeNewUser(result.user, '');
+        await refreshBaseData();
+        state.authModalOpen = false;
+        state.message = '';
+        navigate('/dashboard');
+      }
+    } catch(e) {
+      console.warn("Popup auth failed, trying redirect:", e);
+      try {
+        await signInWithRedirect(auth, googleProvider);
+      } catch(re) {
+        state.message = re.message;
+        render();
+      }
+    }
   }
 
   if (action === 'scan-mode') {
@@ -952,7 +1279,7 @@ async function handleDocumentClick(event) {
   if (action === 'delete-transaction') {
     const transaction = state.transactions.find((item) => item.id === actionEl.dataset.id);
     if (!transaction || !confirm(`Remove "${transaction.merchant}" from your transactions?`)) return;
-    await api(`/api/transactions/${transaction.id}`, { method: 'DELETE' });
+    await deleteDoc(doc(db, 'users', auth.currentUser.uid, 'transactions', transaction.id));
     await refreshTransactions();
     render();
   }
@@ -960,17 +1287,15 @@ async function handleDocumentClick(event) {
   if (action === 'toggle-setting') {
     if (!state.user) return;
     const field = actionEl.dataset.field;
-    const updated = await api('/api/user', {
-      method: 'PATCH',
-      body: { [field]: !state.user[field] },
-    });
-    state.user = updated;
+    const updatedValue = !state.user[field];
+    await updateDoc(doc(db, 'users', auth.currentUser.uid), { [field]: updatedValue, updatedAt: serverTimestamp() });
+    state.user[field] = updatedValue;
     render();
   }
 
   if (action === 'logout') {
     localStorage.removeItem('fintrack:onboarded');
-    navigate('/');
+    await signOut(auth);
   }
 
   if (action === 'onboarding-step') {
@@ -1015,33 +1340,111 @@ async function handleSubmit(event) {
   const data = Object.fromEntries(new FormData(form).entries());
 
   if (formName === 'auth' || formName === 'onboarding-profile') {
-    if (!data.email) {
+    if (formName === 'auth' && !data.email) {
       state.message = 'Email is required to create your account.';
       render();
       return;
     }
-    state.user = await api('/api/user', { method: 'POST', body: data });
-    state.categories = await api('/api/categories');
-    state.message = '';
-    state.authModalOpen = false;
-    if (formName === 'auth') navigate('/dashboard');
-    else {
-      state.onboardingStep = 1;
+    const password = data.password || 'password123';
+    try {
+      if (formName === 'auth') {
+        await signInWithEmailAndPassword(auth, data.email, password).catch(async (e) => {
+          if (e.code === 'auth/user-not-found' || e.code === 'auth/invalid-credential' || e.code === 'auth/wrong-password') {
+             const userCred = await createUserWithEmailAndPassword(auth, data.email, password);
+             await initializeNewUser(userCred.user, data.name, data.location);
+          } else {
+             throw e;
+          }
+        });
+      } else {
+         if (auth.currentUser) {
+            await updateDoc(doc(db, 'users', auth.currentUser.uid), {
+               name: data.name,
+               email: data.email,
+               location: data.location,
+               updatedAt: serverTimestamp()
+            });
+         }
+      }
+      
+      state.message = '';
+      state.authModalOpen = false;
+      if (formName === 'auth') navigate('/dashboard');
+      else {
+        state.onboardingStep = 1;
+        render();
+      }
+    } catch(e) {
+      state.message = e.message;
       render();
     }
+    return;
+  }
+
+  if (formName === 'phone-auth') {
+    if (!data.phone) {
+      state.message = 'Phone number is required.';
+      render();
+      return;
+    }
+    try {
+      state.message = 'Sending code...';
+      render(); // Update UI first so recaptcha-container is in its final state for this step
+      
+      if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.clear();
+      }
+      window.recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+        'size': 'invisible'
+      });
+      
+      const confirmationResult = await signInWithPhoneNumber(auth, data.phone, window.recaptchaVerifier);
+      state.confirmationResult = confirmationResult;
+      state.authMode = 'phone-verify';
+      state.message = '';
+      render();
+    } catch(e) {
+      state.message = e.message;
+      if (window.recaptchaVerifier) {
+        window.recaptchaVerifier.clear();
+        window.recaptchaVerifier = null;
+      }
+      render();
+    }
+    return;
+  }
+
+  if (formName === 'phone-verify') {
+    if (!data.otp || !state.confirmationResult) {
+      state.message = 'Verification code is required.';
+      render();
+      return;
+    }
+    try {
+      const result = await state.confirmationResult.confirm(data.otp);
+      await initializeNewUser(result.user, '');
+      state.message = '';
+      state.authModalOpen = false;
+      state.authMode = 'email';
+      navigate('/dashboard');
+    } catch(e) {
+      state.message = 'Invalid verification code. Please try again.';
+      render();
+    }
+    return;
   }
 
   if (formName === 'add-transaction') {
-    await api('/api/transactions', {
-      method: 'POST',
-      body: {
+    await addDoc(collection(db, 'users', auth.currentUser.uid, 'transactions'), {
         merchant: data.merchant,
         amount: Number(data.amount),
         type: data.type,
         categoryId: data.categoryId,
         source: data.source || 'manual',
+        status: 'approved',
         note: data.note || null,
-      },
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
     });
     state.message = 'Transaction added successfully.';
     await refreshTransactions();
@@ -1051,10 +1454,20 @@ async function handleSubmit(event) {
   if (formName === 'receipt') {
     state.receiptDraft.status = 'saving';
     render();
+    
+    let receiptUrl = null;
+    if (state.receiptFile && state.receiptFile.fileObj) {
+       try {
+         const fileRef = ref(storage, `users/${auth.currentUser.uid}/receipts/${Date.now()}_${state.receiptFile.name}`);
+         await uploadBytes(fileRef, state.receiptFile.fileObj);
+         receiptUrl = await getDownloadURL(fileRef);
+       } catch (e) {
+         console.warn('Failed to upload receipt to storage:', e);
+       }
+    }
+
     const receiptCategory = state.categories.find((category) => category.id === data.categoryId);
-    await api('/api/transactions', {
-      method: 'POST',
-      body: {
+    await addDoc(collection(db, 'users', auth.currentUser.uid, 'transactions'), {
         merchant: data.merchant,
         amount: Number(data.amount),
         type: receiptCategory?.name === 'Income' ? 'income' : 'expense',
@@ -1062,7 +1475,9 @@ async function handleSubmit(event) {
         source: 'receipt',
         status: 'verified',
         note: data.note || null,
-      },
+        receiptUrl: receiptUrl,
+        createdAt: serverTimestamp(),
+        updatedAt: serverTimestamp()
     });
     resetReceiptCapture();
     state.message = 'Receipt recorded successfully.';
@@ -1072,9 +1487,7 @@ async function handleSubmit(event) {
 
   if (formName === 'edit-transaction') {
     const id = state.editingTransaction.id;
-    await api(`/api/transactions/${id}`, {
-      method: 'PATCH',
-      body: {
+    await updateDoc(doc(db, 'users', auth.currentUser.uid, 'transactions', id), {
         merchant: data.merchant,
         amount: Number(data.amount),
         type: data.type,
@@ -1082,7 +1495,7 @@ async function handleSubmit(event) {
         source: data.source,
         status: data.status,
         note: data.note || null,
-      },
+        updatedAt: serverTimestamp()
     });
     state.editingTransaction = null;
     await refreshTransactions();
@@ -1090,14 +1503,15 @@ async function handleSubmit(event) {
   }
 
   if (formName === 'profile') {
-    state.user = await api('/api/user', {
-      method: 'PATCH',
-      body: {
+    await updateDoc(doc(db, 'users', auth.currentUser.uid), {
         name: data.name,
         email: data.email,
         location: data.location,
-      },
+        updatedAt: serverTimestamp()
     });
+    state.user.name = data.name;
+    state.user.email = data.email;
+    state.user.location = data.location;
     render();
   }
 }
@@ -1110,11 +1524,17 @@ async function handleChange(event) {
     render();
   }
 
+  if (input.dataset.input === 'category-select') {
+    state.filters.category = input.value;
+    render();
+  }
+
   if (input.dataset.input === 'currency') {
-    state.user = await api('/api/user', {
-      method: 'PATCH',
-      body: { currency: input.value },
+    await updateDoc(doc(db, 'users', auth.currentUser.uid), {
+        currency: input.value,
+        updatedAt: serverTimestamp()
     });
+    state.user.currency = input.value;
     render();
   }
 
@@ -1137,6 +1557,7 @@ async function handleReceiptFile(file) {
     name: file.name,
     type: file.type || 'application/octet-stream',
     previewUrl: file.type.startsWith('image/') ? URL.createObjectURL(file) : '',
+    fileObj: file,
   };
   state.receiptDraft.status = 'scanning';
   state.receiptDraft.error = '';
@@ -1249,6 +1670,15 @@ async function api(url, options = {}) {
     method: options.method || 'GET',
     headers: {},
   };
+
+  if (auth.currentUser) {
+    const token = await auth.currentUser.getIdToken();
+    init.headers['Authorization'] = `Bearer ${token}`;
+  }
+  // Add target currency for receipt extraction
+  if (state.user && state.user.currency) {
+    init.headers['x-target-currency'] = state.user.currency;
+  }
 
   if (options.body !== undefined) {
     if (options.rawBody) {
