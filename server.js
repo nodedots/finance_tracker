@@ -43,9 +43,10 @@ const RECEIPT_MIME_TYPES = new Set([
   'text/rtf',
 ]);
 
-const server = http.createServer(async (req, res) => {
+const requestHandler = async (req, res) => {
   try {
-    const requestUrl = new URL(req.url, `http://${req.headers.host}`);
+    const host = req.headers.host || 'localhost';
+    const requestUrl = new URL(req.url, `http://${host}`);
 
     if (requestUrl.pathname.startsWith('/api/')) {
       await handleApi(req, res, requestUrl);
@@ -57,11 +58,17 @@ const server = http.createServer(async (req, res) => {
     console.error(error);
     sendJson(res, 500, { error: 'Internal server error' });
   }
-});
+};
 
-server.listen(PORT, HOST, () => {
-  console.log(`Fintrack running at http://${HOST}:${PORT}`);
-});
+const server = http.createServer(requestHandler);
+
+if (process.env.NODE_ENV !== 'production' && !process.env.VERCEL) {
+  server.listen(PORT, HOST, () => {
+    console.log(`Fintrack running at http://${HOST}:${PORT}`);
+  });
+}
+
+module.exports = requestHandler;
 
 async function handleApi(req, res, requestUrl) {
   const method = req.method || 'GET';
